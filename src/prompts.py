@@ -22,3 +22,7 @@ def _load() -> Dict[str, str]:
 
 def get(key: str) -> str:
     return _load()[key]
+
+
+def reload() -> None:
+    _load.cache_clear()
