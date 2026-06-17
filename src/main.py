@@ -13,12 +13,14 @@ from scraper import fetch_all, enrich_readme
 from analyzer import analyze_project
 from notifier import send_report
 from reporter import write_report
-from models import AnalysisResult
+from models import Project, AnalysisResult
 from utils import setup_logger, beijing_today
 
 logger = setup_logger("main")
 
-ANALYZE_N = int(os.getenv("ANALYZE_N", "20"))
+# How many to analyze from each pool
+ANALYZE_TRENDING = int(os.getenv("ANALYZE_TRENDING", "12"))
+ANALYZE_SEARCH   = int(os.getenv("ANALYZE_SEARCH",   "8"))
 
 
 def _pages_url() -> str:
@@ -30,6 +32,13 @@ def _pages_url() -> str:
         owner, name = repo.split("/", 1)
         return f"https://{owner}.github.io/{name}/"
     return ""
+
+
+def _pick(projects: List[Project]) -> List[Project]:
+    """Return balanced selection: top ANALYZE_TRENDING trending + top ANALYZE_SEARCH search."""
+    trending = [p for p in projects if p.source.startswith("trending")][:ANALYZE_TRENDING]
+    search   = [p for p in projects if p.source == "search"][:ANALYZE_SEARCH]
+    return trending + search
 
 
 def main() -> int:
@@ -51,8 +60,15 @@ def main() -> int:
             pass
         return 1
 
-    logger.info("Enriching top %d projects with README...", ANALYZE_N)
-    to_analyze = projects[:ANALYZE_N]
+    to_analyze = _pick(projects)
+    logger.info(
+        "Selected %d for analysis: %d trending + %d search",
+        len(to_analyze),
+        sum(1 for p in to_analyze if p.source.startswith("trending")),
+        sum(1 for p in to_analyze if p.source == "search"),
+    )
+
+    logger.info("Enriching %d projects with README...", len(to_analyze))
     for p in to_analyze:
         enrich_readme(p)
 

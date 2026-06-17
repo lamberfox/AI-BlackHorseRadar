@@ -90,6 +90,7 @@ def fetch_trending(since: str = "daily") -> List[Project]:
                 stargazers_count=stars,
                 owner_login=owner,
                 created_at="",
+                source=f"trending_{since}",
             ))
         except Exception as e:
             logger.warning("Failed to parse trending article: %s", e)
@@ -117,6 +118,7 @@ def fetch_projects(since_days: int = 3) -> List[Project]:
                 stargazers_count=item["stargazers_count"],
                 owner_login=item["owner"]["login"],
                 created_at=item["created_at"],
+                source="search",
             ))
         except Exception as e:
             logger.warning("Skipping search result: %s", e)

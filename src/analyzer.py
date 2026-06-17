@@ -57,6 +57,8 @@ def analyze_project(project: Project) -> AnalysisResult:
             glue_cement_grade=data.get("glue_cement_grade", "推测依据不足"),
             tpd_potential=data.get("tpd_potential", "推测依据不足"),
             backstab_risk=data.get("backstab_risk", "推测依据不足"),
+            monetization_angle=data.get("monetization_angle", "推测依据不足"),
+            product_form=data.get("product_form", "推测依据不足"),
             dark_horse_score=int(data.get("dark_horse_score", 0)),
         )
     except Exception as e:

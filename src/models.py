@@ -12,6 +12,7 @@ class Project:
     owner_login: str
     created_at: str
     readme_excerpt: str = ""
+    source: str = "search"   # "search" | "trending_daily" | "trending_weekly" | "trending_monthly"
 
 
 @dataclass
@@ -22,6 +23,8 @@ class AnalysisResult:
     glue_cement_grade: str = ""
     tpd_potential: str = ""
     backstab_risk: str = ""
+    monetization_angle: str = ""
+    product_form: str = ""
     dark_horse_score: int = 0
     error: Optional[str] = None
 
