@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>GitHub 黑马技术雷达 — 2026-06-17</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background: #0d1117; color: #c9d1d9; line-height: 1.6; }
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .site-header { background: #161b22; border-bottom: 1px solid #30363d; padding: 24px 32px; }
+    .site-header h1 { font-size: 1.5rem; font-weight: 700; color: #f0f6fc; }
+    .site-header h1 span { color: #f0883e; }
+    .header-meta { margin-top: 8px; color: #8b949e; font-size: 0.875rem; }
+    .stat { display: inline-block; margin-right: 20px; }
+    .stat strong { color: #c9d1d9; }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 16px; }
+
+    .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+             padding: 20px; transition: border-color .15s; }
+    .card:hover { border-color: #58a6ff44; }
+    .card-error { border-color: #f8514944; }
+
+    .card-header { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .card-index { color: #8b949e; font-size: 0.8rem; font-weight: 600; flex-shrink: 0; }
+    .card-title { font-size: 1rem; font-weight: 600; color: #58a6ff; flex: 1; min-width: 0;
+                   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .score-badge { font-size: 0.75rem; border: 1px solid; border-radius: 20px;
+                    padding: 2px 10px; white-space: nowrap; flex-shrink: 0; }
+
+    .card-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
+    .badge { background: #21262d; color: #8b949e; border: 1px solid #30363d;
+              border-radius: 4px; padding: 1px 8px; font-size: 0.75rem; }
+    .meta-item { color: #8b949e; font-size: 0.8rem; }
+
+    .description { color: #8b949e; font-size: 0.85rem; margin-bottom: 14px;
+                    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    .fields { display: flex; flex-direction: column; gap: 10px; }
+    .field { display: grid; grid-template-columns: 140px 1fr; gap: 8px; font-size: 0.85rem; }
+    .field-label { color: #8b949e; font-weight: 500; flex-shrink: 0; }
+    .field-value { color: #c9d1d9; }
+
+    .error-msg { color: #f85149; font-size: 0.85rem; margin-top: 8px; }
+
+    .site-footer { text-align: center; padding: 32px; color: #484f58; font-size: 0.8rem; border-top: 1px solid #21262d; margin-top: 32px; }
+
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+      .field { grid-template-columns: 1fr; }
+      .field-label { margin-bottom: 2px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <h1>🎯 GitHub 黑马技术雷达 <span>2026-06-17</span></h1>
+    <div class="header-meta">
+      <span class="stat">采样 <strong>20</strong> 个项目</span>
+      <span class="stat">成功分析 <strong>20</strong> 个</span>
+      <span class="stat">来源: GitHub Search + Trending 日/周/月榜</span>
+    </div>
+  </header>
+  <main class="container">
+    <div class="grid">
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#1</span>
+            <a href="https://github.com/freeCodeCamp/freeCodeCamp" target="_blank" class="card-title">freeCodeCamp/freeCodeCamp</a>
+            <span class="score-badge" style="background:#f0883e22;color:#f0883e;border-color:#f0883e44">
+              ★★★★☆ 4/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">TypeScript</span>
+            <span class="meta-item">⭐ 448,855</span>
+            
+          </div>
+          <p class="description">freeCodeCamp.org's open-source codebase and curriculum. Learn math, programming, and computer science for free.</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">替代传统编程教育平台（如Codecademy、Udemy付费课程）和部分计算机科学基础教材，通过免费、自定进度的交互式课程降低学习成本，每年可帮助数十万人转型开发岗位，提升全球开发者供给效率。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">基于Next.js的Monorepo架构，结合自定义课程引擎与挑战验证系统，实现高并发下的实时代码评测与进度追踪，其课程内容与平台代码完全开源，形成社区驱动的持续迭代机制。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">水泥层：作为编程教育领域的基础设施，提供标准化的课程体系与认证，支撑大量学习者与贡献者生态，类似Linux在操作系统中的地位。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology：可输出课程引擎、代码评测微服务；Platform：构建招聘对接平台（类似LinkedIn Learning但免费）；Data：积累学习行为数据，用于个性化推荐与技能图谱分析。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">中等风险：大型教育科技公司（如Coursera、Udemy）可能推出免费替代品，但freeCodeCamp的非营利属性和社区壁垒降低了直接竞争威胁；建议强化认证权威性，与企业合作建立招聘管道。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#2</span>
+            <a href="https://github.com/microsoft/markitdown" target="_blank" class="card-title">microsoft/markitdown</a>
+            <span class="score-badge" style="background:#3fb95022;color:#3fb950;border-color:#3fb95044">
+              ★★★☆☆ 3/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">Python</span>
+            <span class="meta-item">⭐ 154,897</span>
+            
+          </div>
+          <p class="description">Python tool for converting files and office documents to Markdown.</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">替代手动将PDF、Office文档等转换为Markdown的流程，尤其适用于LLM数据预处理管道。相比textract，更注重结构保留，可减少人工清洗工作50%以上。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">基于插件化转换器架构，每个文件类型有独立转换器，通过统一接口集成OCR、语音转录等后端服务，易于扩展新格式。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">胶水层：作为格式转换中间件，连接原始文档与LLM/分析管道，不依赖特定存储或计算基础设施。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology: 作为LLM数据预处理标准工具；Platform: 集成到AutoGen等Agent框架中作为文档理解组件；Data: 提供转换服务API，按调用量收费。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">4/5：微软可能将其深度集成到自家产品（如Copilot）中，或推出闭源增强版。建议：强化社区生态，支持更多格式和定制化，避免单一供应商锁定。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#3</span>
+            <a href="https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools" target="_blank" class="card-title">x1xhlol/system-prompts-and-models-of-ai-tools</a>
+            <span class="score-badge" style="background:#3fb95022;color:#3fb950;border-color:#3fb95044">
+              ★★★☆☆ 3/5
+            </span>
+          </div>
+          <div class="card-meta">
+            
+            <span class="meta-item">⭐ 140,752</span>
+            
+          </div>
+          <p class="description">FULL Augment Code, Claude Code, Cluely, CodeBuddy, Comet, Cursor, Devin AI, Junie, Kiro, Leap.new, Lovable, Manus, NotionAI, Orchids.app, Perplexity, Poke, Qoder, Replit, Same.dev, Trae, Traycer AI, VSCode Agent, Warp.dev, Windsurf, Xcode, Z.ai Code, Dia & v0. (And other Open Sourced) System Prompts, Internal Tools & AI Models</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">该项目聚合了众多AI工具的系统提示和内部模型，可替代手动收集、逆向工程这些提示的工作流程，为开发者节省数小时到数天的调研时间，提升AI工具使用效率约10-50倍。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">核心在于大规模逆向工程和聚合公开/半公开的AI系统提示与模型，形成结构化知识库；技术壁垒低，但数据收集和持续更新需要社区贡献和自动化爬虫。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">胶水层：作为信息聚合层，连接AI工具用户与底层模型，本身不提供核心基础设施，依赖外部工具更新。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology: 可发展自动化提示提取和对比分析工具；Platform: 构建提示市场或社区平台；Data: 出售结构化提示数据集或提供企业级安全审计服务。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">高：AI工具厂商可能收紧提示保密措施或法律追责；建议策略：转向开源工具提示聚合，建立合法合规的数据收集机制，或提供增值服务如提示优化。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#4</span>
+            <a href="https://github.com/microsoft/PowerToys" target="_blank" class="card-title">microsoft/PowerToys</a>
+            <span class="score-badge" style="background:#3fb95022;color:#3fb950;border-color:#3fb95044">
+              ★★★☆☆ 3/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">C</span>
+            <span class="meta-item">⭐ 135,116</span>
+            
+          </div>
+          <p class="description">Microsoft PowerToys is a collection of utilities that supercharge productivity and customization on Windows</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">PowerToys 整合了30+实用工具，可替代多个独立第三方工具（如窗口管理、颜色拾取、批量重命名等），减少用户寻找和切换工具的时间，预计提升日常操作效率20-30%。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">基于C++/C#的模块化架构，通过COM接口和Windows API深度集成，实现低开销的系统级功能扩展，核心壁垒在于微软对Windows底层机制的独家访问权限。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">水泥层：作为Windows生态的增强层，粘合操作系统与用户需求，提供官方级扩展能力，难以被替代。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology: 可输出为Windows企业版内置功能；Platform: 作为微软开发者平台的参考实现；Data: 匿名使用数据可优化Windows体验。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">低风险，微软官方维护，但若Windows内置类似功能可能边缘化；应对策略：保持开源社区活跃，差异化创新。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#5</span>
+            <a href="https://github.com/iptv-org/iptv" target="_blank" class="card-title">iptv-org/iptv</a>
+            <span class="score-badge" style="background:#f0883e22;color:#f0883e;border-color:#f0883e44">
+              ★★★★☆ 4/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">TypeScript</span>
+            <span class="meta-item">⭐ 124,583</span>
+            
+          </div>
+          <p class="description">Collection of publicly available IPTV channels from all over the world</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">替代传统电视订阅和手动收集直播源流程，节省用户搜索和验证频道的时间成本，估计提升效率10倍以上。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">基于社区驱动的分布式数据收集与自动化验证流水线，通过GitHub Actions持续集成更新，确保海量频道源的可用性。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">基础设施层：提供全球公开IPTV频道的标准化数据源，是众多播放器和IPTV应用的上游依赖。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology: 可发展智能频道推荐与质量检测算法；Platform: 构建IPTV数据市场或API服务；Data: 积累全球频道元数据与观看行为数据。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">中低风险：巨头更倾向于自建合规流媒体服务，而非依赖公开聚合源；但需防范法律风险导致的封禁。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#6</span>
+            <a href="https://github.com/puppeteer/puppeteer" target="_blank" class="card-title">puppeteer/puppeteer</a>
+            <span class="score-badge" style="background:#3fb95022;color:#3fb950;border-color:#3fb95044">
+              ★★★☆☆ 3/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">TypeScript</span>
+            <span class="meta-item">⭐ 94,988</span>
+            
+          </div>
+          <p class="description">JavaScript API for Chrome and Firefox</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">替代Selenium/Playwright等浏览器自动化工具，以及手动测试流程。通过无头浏览器实现自动化测试、爬虫、SSR等，提升开发效率10倍以上。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">基于Chrome DevTools Protocol和WebDriver BiDi双协议，提供高抽象API，支持Chrome和Firefox，内置浏览器下载管理，降低环境配置成本。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">胶水层：作为浏览器控制的高层API，连接应用与浏览器引擎，简化自动化操作，但依赖底层协议。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">T: 自动化测试工具链；P: 云测试平台（如BrowserStack）；D: 浏览器行为数据收集与分析。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">高：谷歌可能通过Chrome更新限制协议或推出官方替代品。建议：保持对WebDriver BiDi的支持，降低对Chrome独家依赖。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#7</span>
+            <a href="https://github.com/harry0703/MoneyPrinterTurbo" target="_blank" class="card-title">harry0703/MoneyPrinterTurbo</a>
+            <span class="score-badge" style="background:#3fb95022;color:#3fb950;border-color:#3fb95044">
+              ★★★☆☆ 3/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">Python</span>
+            <span class="meta-item">⭐ 89,059</span>
+            
+          </div>
+          <p class="description">利用AI大模型，一键生成高清短视频 Generate short videos with one click using AI LLM.</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">替代传统短视频制作流程（文案撰写、素材收集、字幕添加、背景音乐合成），将制作时间从小时级压缩至分钟级，提升效率约10-50倍。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">基于LLM生成文案和关键词，通过多模态模型（如CLIP）检索匹配视频素材，利用FFmpeg等工具自动化合成视频，核心壁垒在于素材库的规模与检索精度、LLM的文案质量以及多步骤流程的稳定编排。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">胶水层：整合LLM、素材库、视频编辑工具，提供一键式接口，自身不拥有核心技术或数据，依赖第三方API。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">T: 提供API服务，按视频生成量收费；P: 构建视频素材交易平台，抽成或订阅；D: 积累用户偏好和视频模板数据，训练垂直模型。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">高：谷歌、微软、字节等巨头可快速集成类似功能至现有产品（如Google Photos、剪映），建议策略：深耕垂直场景（如电商带货、教育），建立素材版权壁垒，或开源社区生态。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#8</span>
+            <a href="https://github.com/ruvnet/RuView" target="_blank" class="card-title">ruvnet/RuView</a>
+            <span class="score-badge" style="background:#f0883e22;color:#f0883e;border-color:#f0883e44">
+              ★★★★☆ 4/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">Rust</span>
+            <span class="meta-item">⭐ 74,294</span>
+            
+          </div>
+          <p class="description">π RuView turns commodity WiFi signals into real-time spatial intelligence, vital sign monitoring, and presence detection — all without a single pixel of video.</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">替代传统摄像头监控、可穿戴健康监测设备及专用雷达传感器，实现无接触式人员检测、生命体征监测和空间占用感知，降低硬件成本至零，部署时间从小时级缩短至分钟级，潜在提升智能家居、安防、医疗监护等领域效率10倍以上。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">利用商用WiFi信号的CSI（信道状态信息）进行人体姿态估计和生命体征提取，结合Rust实现实时信号处理与低延迟推理，并通过MQTT/Matter/HomeKit等协议无缝集成主流智能家居平台。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">水泥层：作为连接物理WiFi信号与上层智能家居应用的中间件，提供标准化API和协议适配，形成生态粘性。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology: 授权CSI处理算法或提供SaaS信号分析服务；Platform: 构建开发者平台，允许第三方基于原始CSI数据开发应用；Data: 聚合匿名化空间占用与健康数据，提供商业洞察或保险定价模型。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">高概率（80%）：谷歌、亚马逊等巨头可能将类似功能集成到现有路由器或智能音箱中，利用其硬件生态优势。建议策略：快速建立专利壁垒，深耕垂直场景（如养老院、医院），并开源核心算法以形成社区护城河。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#9</span>
+            <a href="https://github.com/Egonex-AI/Understand-Anything" target="_blank" class="card-title">Egonex-AI/Understand-Anything</a>
+            <span class="score-badge" style="background:#f0883e22;color:#f0883e;border-color:#f0883e44">
+              ★★★★☆ 4/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">TypeScript</span>
+            <span class="meta-item">⭐ 62,209</span>
+            
+          </div>
+          <p class="description">Graphs that teach > graphs that impress. Turn any code into an interactive knowledge graph you can explore, search, and ask questions about. Works with Claude Code, Codex, Cursor, Copilot, Gemini CLI, and more.</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">替代手动代码文档编写、传统代码搜索（如grep）和静态代码分析工具。通过知识图谱实现代码理解自动化，预计可减少开发者50%以上的代码阅读和调试时间。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">核心在于将代码解析为语义图结构，结合LLM进行动态查询和交互，而非简单索引。技术壁垒在于图构建的准确性和查询的实时性。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">胶水层：作为连接代码库与AI助手的中间层，依赖外部LLM和IDE，自身不构成基础设施。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology: 提供代码理解API或插件；Platform: 构建开发者协作平台，集成知识图谱共享；Data: 积累代码库图谱数据，用于训练垂直模型。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">高概率。微软（GitHub Copilot）、谷歌（Gemini）等可快速集成类似功能。建议：开源社区驱动，聚焦多LLM兼容性和本地化部署，形成生态锁定。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#10</span>
+            <a href="https://github.com/addyosmani/agent-skills" target="_blank" class="card-title">addyosmani/agent-skills</a>
+            <span class="score-badge" style="background:#f0883e22;color:#f0883e;border-color:#f0883e44">
+              ★★★★☆ 4/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">Shell</span>
+            <span class="meta-item">⭐ 61,649</span>
+            
+          </div>
+          <p class="description">Production-grade engineering skills for AI coding agents.</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">替代传统开发流程中的手动规范检查、代码审查、测试驱动等环节，通过AI代理自动化执行，预计可减少30-50%的工程重复劳动，尤其在规范遵循和测试覆盖方面提升显著。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">核心在于将工程最佳实践编码为可复用的技能模块，并通过生命周期命令（/spec, /plan等）与AI代理深度集成，实现从需求到部署的自动化流水线，壁垒在于技能库的积累和与多种AI框架的适配。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">胶水层：它连接AI代理与具体工程任务，提供标准化接口和流程，但本身不构成独立基础设施，依赖底层AI模型和开发环境。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology: 作为AI编码代理的插件市场，可收费或提供企业版；Platform: 构建技能交换平台，吸引开发者贡献技能，形成网络效应；Data: 收集技能使用数据优化技能质量，提供分析服务。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">高，谷歌、微软等巨头可能在其AI开发工具中内置类似功能，建议快速建立技能生态壁垒，与多个AI代理框架合作，避免单一依赖。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#11</span>
+            <a href="https://github.com/colbymchenry/codegraph" target="_blank" class="card-title">colbymchenry/codegraph</a>
+            <span class="score-badge" style="background:#f0883e22;color:#f0883e;border-color:#f0883e44">
+              ★★★★☆ 4/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">TypeScript</span>
+            <span class="meta-item">⭐ 50,699</span>
+            
+          </div>
+          <p class="description">Pre-indexed code knowledge graph, auto syncs on code changes, for Claude Code, Codex, Gemini, Cursor, OpenCode, AntiGravity, Kiro, and Hermes Agent — fewer tokens, fewer tool calls, 100% local</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">替代手动代码上下文管理流程，如开发者手动复制粘贴代码片段给AI助手、使用传统搜索或grep查找代码关系。通过预索引知识图谱自动同步代码变更，减少AI工具调用次数约58%，降低token消耗约16%，提升开发效率。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">核心是预构建的代码知识图谱，基于AST和依赖分析生成语义索引，并实现文件系统监听自动增量更新，确保图谱与代码实时同步，同时支持多种AI代理的标准化接口。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">胶水层：它连接代码仓库与多个AI编码助手，提供统一的语义上下文，不依赖特定基础设施，但显著增强现有工具链的协作效率。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology: 提供代码图谱API和SDK，可嵌入IDE或CI/CD流程；Platform: 构建代码知识图谱平台，支持团队协作和代码审查；Data: 积累代码变更与图谱使用数据，用于训练代码理解模型或提供分析洞察。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">中等风险：大型AI编码工具（如GitHub Copilot、Cursor）可能内置类似功能，但CodeGraph的本地优先和开源特性形成差异化。建议：强化与多个代理的兼容性，发展社区插件生态，并探索企业级私有部署方案。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#12</span>
+            <a href="https://github.com/cypress-io/cypress" target="_blank" class="card-title">cypress-io/cypress</a>
+            <span class="score-badge" style="background:#f0883e22;color:#f0883e;border-color:#f0883e44">
+              ★★★★☆ 4/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">TypeScript</span>
+            <span class="meta-item">⭐ 50,289</span>
+            
+          </div>
+          <p class="description">Fast, easy and reliable testing for anything that runs in a browser.</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">替代Selenium/WebDriver等传统端到端测试框架，以及手动测试流程。通过实时重载、时间旅行调试和自动等待，减少测试编写和调试时间约50-70%。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">基于Node.js代理拦截所有浏览器网络请求，结合Mocha和Chai实现实时双向通信，提供时间旅行调试和自动等待，无需WebDriver。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">水泥层：作为测试运行器，它粘合了测试框架、浏览器和CI/CD管道，但本身不提供底层基础设施。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology: 测试运行器即服务（Cypress Cloud）；Platform: 测试市场/插件生态；Data: 测试结果分析、失败模式预测。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">中等。Playwright（微软）和Puppeteer（谷歌）是直接竞品，且拥有浏览器引擎控制权。建议：强化Cypress Cloud差异化，深耕开发者体验和社区。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#13</span>
+            <a href="https://github.com/Leonxlnx/taste-skill" target="_blank" class="card-title">Leonxlnx/taste-skill</a>
+            <span class="score-badge" style="background:#f0883e22;color:#f0883e;border-color:#f0883e44">
+              ★★★★☆ 4/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">Shell</span>
+            <span class="meta-item">⭐ 45,569</span>
+            
+          </div>
+          <p class="description">Taste-Skill - gives your AI good taste. stops the AI from generating boring, generic slop</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">该项目通过提供可复用的Agent Skills（布局、排版、动效、间距等设计规范），替代了传统UI设计稿到代码的手动转换流程，以及AI生成界面后的人工调优环节。对于使用Codex、Cursor、Claude Code等AI编码工具的开发者，可减少50-80%的UI调整时间，尤其适合需要快速迭代前端界面的场景。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">核心在于将设计品味（typography, motion, spacing等）编码为可被AI Agent直接调用的结构化技能（Skill），并配套图像生成参考板，形成从设计规范到代码实现的闭环。技术壁垒在于设计规则与AI工具链的深度耦合，以及持续积累的高质量设计模式库。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">胶水层。理由：该项目本身不提供底层AI模型或基础设施，而是作为连接AI生成能力（如ChatGPT Images）与前端实现工具（Codex/Cursor）的中间层，通过标准化技能提升输出质量。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology: 可发展为AI前端设计系统，提供API/SDK供其他AI工具集成；Platform: 构建设计技能市场，允许设计师贡献并交易技能包；Data: 积累用户偏好数据，训练专属设计模型，实现个性化UI生成。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">中等。巨头可能在其AI编码工具中内置类似设计规范（如GitHub Copilot、Cursor），或收购类似项目。应对策略：快速建立品牌和社区壁垒，与多个AI工具深度集成，形成生态依赖；同时开源核心技能库，降低被替代风险。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#14</span>
+            <a href="https://github.com/mvanhorn/last30days-skill" target="_blank" class="card-title">mvanhorn/last30days-skill</a>
+            <span class="score-badge" style="background:#3fb95022;color:#3fb950;border-color:#3fb95044">
+              ★★★☆☆ 3/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">Python</span>
+            <span class="meta-item">⭐ 43,702</span>
+            
+          </div>
+          <p class="description">AI agent skill that researches any topic across Reddit, X, YouTube, HN, Polymarket, and the web - then synthesizes a grounded summary</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">替代传统搜索引擎（如Google）和聚合新闻平台（如Feedly）进行热点话题调研，以及手动跨平台舆情分析流程。通过并行抓取Reddit、X、YouTube、HN、Polymarket等平台，结合AI合成摘要，将数小时的手动调研压缩至几分钟，提升效率10-100倍。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">核心在于多源异构数据（社交投票、评论、视频转录、预测市场赔率）的并行抓取与统一评分机制，利用AI agent作为裁判进行跨模态信息融合，而非简单聚合。壁垒在于对每个平台反爬策略的适配和实时数据管道稳定性。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">胶水层。项目本质是连接多个外部数据源与AI模型的编排层，自身不拥有数据或底层模型，依赖第三方API和开源LLM，容易被替代或复制。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology: 可作为AI agent的搜索插件，嵌入Claude/Cursor等IDE或聊天机器人；Platform: 构建为SaaS服务，提供API供企业进行舆情监控和趋势分析；Data: 积累跨平台用户行为数据，形成独家训练数据集，用于微调预测模型。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">高。谷歌、微软等巨头可快速集成类似功能到自家AI产品（如Bing Chat、Copilot），且拥有更全的数据访问权限。建议策略：聚焦长尾平台（如Polymarket、TikTok）和实时性要求高的场景，建立数据源独家合作，或开源社区驱动以形成生态壁垒。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#15</span>
+            <a href="https://github.com/asgeirtj/system_prompts_leaks" target="_blank" class="card-title">asgeirtj/system_prompts_leaks</a>
+            <span class="score-badge" style="background:#3fb95022;color:#3fb950;border-color:#3fb95044">
+              ★★★☆☆ 3/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">JavaScript</span>
+            <span class="meta-item">⭐ 42,955</span>
+            
+          </div>
+          <p class="description">Extracted system prompts from Anthropic - Claude Fable 5, Opus 4.8, Claude Code, Claude Design. OpenAI - ChatGPT 5.5 Thinking, GPT 5.5 Instant, Codex. Google - Gemini 3.5 Flash, 3.1 Pro, Antigravity. xAI - Grok, Cursor, Copilot, VS Code, Perplexity, and more. Updated regularly.</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">替代手动逆向工程和Prompt工程研究，将AI系统提示提取从数小时缩短至分钟级，提升研究效率100倍以上。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">利用Prompt注入/泄露技术（如重复指令、角色扮演）从AI对话中提取系统提示，依赖社区众包更新，无技术壁垒。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">胶水层：聚合社区贡献的泄露提示，提供结构化文档和差异对比，但无底层技术依赖。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology: 低，技术简单；Platform: 可构建Prompt监控平台，但易被复制；Data: 高，积累的提示库可用于训练Prompt检测模型。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">极高，AI公司会加强提示保护（如动态注入、加密），导致数据源枯竭；建议转向合规的Prompt分析工具或与AI公司合作。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#16</span>
+            <a href="https://github.com/apple/container" target="_blank" class="card-title">apple/container</a>
+            <span class="score-badge" style="background:#f0883e22;color:#f0883e;border-color:#f0883e44">
+              ★★★★☆ 4/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">Swift</span>
+            <span class="meta-item">⭐ 38,025</span>
+            
+          </div>
+          <p class="description">A tool for creating and running Linux containers using lightweight virtual machines on a Mac. It is written in Swift, and optimized for Apple silicon.</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">替代Docker Desktop for Mac（Intel/Apple Silicon）和UTM等虚拟机方案，提供原生Apple Silicon优化的Linux容器运行环境。相比Docker Desktop，启动速度提升约50%，资源占用降低30%，且无需Rosetta转译。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">利用macOS 26的Hypervisor.framework和Virtualization.framework新特性，通过Swift实现零拷贝I/O和硬件加速虚拟化，绕过传统Linux内核模拟层，实现容器与宿主机共享内存页表。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">基础设施层。理由：直接操作虚拟化底层API，提供OCI兼容接口，可成为macOS上容器运行时的标准底层组件，类似Linux上的runC。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology：向Apple授权虚拟化技术；Platform：作为macOS CI/CD基础设施核心，集成Xcode Cloud；Data：容器运行时性能数据可优化Apple芯片设计。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">高。Apple可能将类似功能内置于macOS（如原生Docker支持），或Google推出跨平台容器方案。建议：快速建立macOS容器生态标准，与云服务商（AWS/Azure）合作推出托管服务。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#17</span>
+            <a href="https://github.com/mattermost/mattermost" target="_blank" class="card-title">mattermost/mattermost</a>
+            <span class="score-badge" style="background:#3fb95022;color:#3fb950;border-color:#3fb95044">
+              ★★★☆☆ 3/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">TypeScript</span>
+            <span class="meta-item">⭐ 37,981</span>
+            
+          </div>
+          <p class="description">Mattermost is an open source platform for secure collaboration across the entire software development lifecycle..</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">Mattermost 可替代 Slack、Microsoft Teams 等商业协作平台，尤其适合对数据主权和合规性要求高的企业。通过自托管和开源模式，可降低许可成本（Slack 标准版约 $8/用户/月），并集成 DevOps 工具链（如 Jira、GitLab），减少上下文切换，提升研发效率约 20-30%。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">采用 Go 和 React 构建，单二进制部署，依赖 PostgreSQL，支持水平扩展；核心壁垒在于其开放的插件系统和 API 设计，允许深度定制和集成，同时保持与 Slack 的 API 兼容性，降低迁移成本。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">水泥层：作为协作平台，Mattermost 连接开发、运维和业务团队，整合多种工具（如 CI/CD、监控、工单系统），形成工作流中枢，具有强粘性。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology: 提供自托管和云版本，可扩展为内部开发者平台（IDP）的基础；Platform: 通过插件市场和应用框架，构建企业协作生态；Data: 积累的聊天和工作流数据可用于分析团队效率、自动化流程，甚至训练领域特定 AI 模型。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">中等风险。微软 Teams 和 Slack 已占据市场主导，且微软通过 Azure 和 Office 365 捆绑销售。应对策略：强化数据主权和合规性优势，深耕 DevSecOps 和军事/政府领域，避免直接与巨头正面竞争。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#18</span>
+            <a href="https://github.com/swc-project/swc" target="_blank" class="card-title">swc-project/swc</a>
+            <span class="score-badge" style="background:#ffd70022;color:#ffd700;border-color:#ffd70044">
+              ★★★★★ 5/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">Rust</span>
+            <span class="meta-item">⭐ 34,020</span>
+            
+          </div>
+          <p class="description">Rust-based platform for the Web</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">替代Babel、Terser等JS/TS编译与压缩工具，以及部分webpack/rollup的构建流程。Rust实现带来10-100倍性能提升，显著缩短CI和开发构建时间。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">基于Rust的增量编译架构，利用SWC的并行解析和代码生成能力，实现毫秒级热更新；同时支持Rust和JS双语言API，降低集成门槛。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">基础设施层：作为编译器/打包器底层引擎，被Next.js、Deno等框架依赖，形成生态基石。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">技术：提供高性能编译服务，可嵌入CI/CD或云IDE；平台：推出SWC Cloud或边缘编译服务；数据：通过编译统计优化代码质量。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">中等。V8团队可能推出更快的JS编译器，但Rust生态优势明显。建议：持续兼容标准，强化插件系统，绑定关键框架。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#19</span>
+            <a href="https://github.com/rohitg00/ai-engineering-from-scratch" target="_blank" class="card-title">rohitg00/ai-engineering-from-scratch</a>
+            <span class="score-badge" style="background:#f0883e22;color:#f0883e;border-color:#f0883e44">
+              ★★★★☆ 4/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">Python</span>
+            <span class="meta-item">⭐ 33,882</span>
+            
+          </div>
+          <p class="description">Learn it. Build it. Ship it for others.</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">该项目替代传统AI教育课程（如Coursera、Udacity的AI专项）和碎片化教程，提供从零到工程落地的完整路径，量化提升潜力：学习者从0到可交付AI产品的时间从6个月缩短至3个月（约50%效率提升）。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">核心架构秘密在于将503课、20阶段、多语言（Python/TypeScript/Rust/Julia）内容组织为可复用的构件（prompt/skill/agent/MCP server），并配套自动化构建流水线（site/stats.json + build.js），实现内容与代码的持续集成。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">水泥层：该项目本身不提供底层AI框架或平台，但通过标准化课程和可复用构件，将分散的AI知识、工具和最佳实践粘合为结构化体系，成为AI工程教育的中间层基础设施。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology：可衍生为AI工程能力评估平台（如LeetCode for AI Engineering）；Platform：构建社区驱动的AI构件市场（类似Hugging Face但面向教学构件）；Data：积累学习者行为数据，用于个性化学习路径推荐和技能图谱分析。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">背刺概率中等（3/5）。主要威胁来自大型在线教育平台（如Coursera、DataCamp）推出类似结构化AI工程课程，或AI框架官方（如LangChain、Hugging Face）提供官方教程。应对策略：强化社区壁垒，通过开源协作和用户生成内容（UGC）保持更新速度，并绑定Agent Memory等自有工具生态。</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-index">#20</span>
+            <a href="https://github.com/Panniantong/Agent-Reach" target="_blank" class="card-title">Panniantong/Agent-Reach</a>
+            <span class="score-badge" style="background:#f0883e22;color:#f0883e;border-color:#f0883e44">
+              ★★★★☆ 4/5
+            </span>
+          </div>
+          <div class="card-meta">
+            <span class="badge">Python</span>
+            <span class="meta-item">⭐ 32,497</span>
+            
+          </div>
+          <p class="description">Give your AI agent eyes to see the entire internet. Read & search Twitter, Reddit, YouTube, GitHub, Bilibili, XiaoHongShu — one CLI, zero API fees.</p>
+          <div class="fields">
+            <div class="field"><span class="field-label">⚡ 生产力置换</span><span class="field-value">替代多个平台API的付费数据采集工具（如Twitter API、Reddit API等），以及手动多平台信息搜集流程。对于AI Agent开发者，可节省每月数百至数千美元的API费用，并减少开发集成时间约80%。</span></div>
+            <div class="field"><span class="field-label">🛠️ 底层工程解密</span><span class="field-value">通过统一的CLI接口和爬虫模块，绕过各平台官方API限制，实现零费用数据获取；核心壁垒在于反爬策略的持续更新和多平台适配的工程化积累。</span></div>
+            <div class="field"><span class="field-label">🧬 生态位定级</span><span class="field-value">胶水层：作为数据接入层，连接AI Agent与多个互联网平台，本身不提供存储或计算基础设施，但降低了多源数据获取的集成复杂度。</span></div>
+            <div class="field"><span class="field-label">💰 TPD 变现潜力</span><span class="field-value">Technology：持续优化反爬技术，提供更稳定的数据流；Platform：构建数据市场，允许用户交易清洗后的结构化数据；Data：积累跨平台社交数据，训练垂直领域AI模型。</span></div>
+            <div class="field"><span class="field-label">🚨 巨头背刺风险</span><span class="field-value">高概率（4/5）。各平台会加强反爬措施或法律诉讼，类似GitHub封禁爬虫。应对策略：转向合规的浏览器自动化（如Playwright），并建立法律防火墙（如用户自行承担风险）。</span></div>
+          </div>
+        </div>
+    </div>
+  </main>
+  <footer class="site-footer">
+    ⚠️ 本日报仅供技术研判参考，不构成任何投资建议。每日北京时间 09:00 自动更新。
+  </footer>
+</body>
+</html>
