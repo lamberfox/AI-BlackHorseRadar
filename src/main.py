@@ -11,16 +11,20 @@ except ImportError:
 
 from scraper import fetch_all, enrich_readme
 from analyzer import analyze_project
+from app_store_client import fetch_app_store_data, save_snapshots, batch_enrich_descriptions
+from app_analyzer import analyze_app, rank_apps_for_push
 from notifier import send_report
 from reporter import write_report
-from models import Project, AnalysisResult
+from models import Project, AnalysisResult, AppProject, AppAnalysisResult
 from utils import setup_logger, beijing_today
 
 logger = setup_logger("main")
 
-# How many to analyze from each pool
 ANALYZE_TRENDING = int(os.getenv("ANALYZE_TRENDING", "12"))
 ANALYZE_SEARCH   = int(os.getenv("ANALYZE_SEARCH",   "8"))
+APP_ANALYZE_N    = int(os.getenv("APP_ANALYZE_N",    "10"))
+APP_PUSH_N       = int(os.getenv("APP_PUSH_N",       "100"))
+SKIP_GITHUB      = os.getenv("SKIP_GITHUB", "").lower() in ("1", "true", "yes")
 
 
 def _pages_url() -> str:
@@ -35,13 +39,12 @@ def _pages_url() -> str:
 
 
 def _pick(projects: List[Project]) -> List[Project]:
-    """Return balanced selection: top ANALYZE_TRENDING trending + top ANALYZE_SEARCH search."""
     trending = [p for p in projects if p.source.startswith("trending")][:ANALYZE_TRENDING]
     search   = [p for p in projects if p.source == "search"][:ANALYZE_SEARCH]
     return trending + search
 
 
-def main() -> int:
+def _run_github_pipeline() -> List[AnalysisResult]:
     start = time.time()
     logger.info("=== GitHub 黑马雷达 启动 ===")
 
@@ -52,13 +55,8 @@ def main() -> int:
         projects = []
 
     if not projects:
-        logger.warning("No projects fetched; sending fallback notification")
-        try:
-            from notifier import _post
-            _post(f"# GitHub 黑马雷达（{beijing_today()}）\n\n⚠️ 采集阶段失败，请检查 Actions 日志。")
-        except Exception:
-            pass
-        return 1
+        logger.warning("No GitHub projects fetched")
+        return []
 
     to_analyze = _pick(projects)
     logger.info(
@@ -78,14 +76,93 @@ def main() -> int:
         results.append(analyze_project(project))
 
     success_count = sum(1 for r in results if r.success)
-    elapsed = time.time() - start
     logger.info(
-        "=== 完成: 采集 %d 个，分析 %d/%d 成功，耗时 %.1fs ===",
-        len(projects), success_count, len(results), elapsed,
+        "=== GitHub 完成: 采集 %d 个，分析 %d/%d 成功，耗时 %.1fs ===",
+        len(projects), success_count, len(results), time.time() - start,
     )
+    return results
 
-    write_report(results)
-    send_report(results, pages_url=_pages_url())
+
+def main() -> int:
+    results: List[AnalysisResult] = []
+    if SKIP_GITHUB:
+        logger.info("SKIP_GITHUB=1 — 跳过 GitHub 管道")
+    else:
+        results = _run_github_pipeline()
+
+    app_results: List[AppAnalysisResult] = []
+    new_listing_results: List[AppAnalysisResult] = []
+    new_listings = None
+    app_pool_size = 0
+    app_snapshots = {}
+    app_hits_total = 0
+    try:
+        logger.info("=== App Store 雷达 启动 ===")
+        new_pool, black_horses, app_snapshots = fetch_app_store_data()
+        app_pool_size = len(new_pool)
+        app_hits_total = len(black_horses)
+        black_horse_ids = {a.app_id for a in black_horses}
+
+        pool_for_rank = [a for a in new_pool if a.app_id not in black_horse_ids]
+        picked = rank_apps_for_push(pool_for_rank, top_n=APP_PUSH_N)
+        new_listings = picked
+        to_analyze_horses = black_horses[:APP_ANALYZE_N]
+
+        logger.info(
+            "App Store: 采集池 %d → 顾问筛选 %d → 深入分析 %d；黑马命中 %d（分析 %d）",
+            app_pool_size, len(picked), len(picked),
+            app_hits_total, len(to_analyze_horses),
+        )
+
+        batch_enrich_descriptions(picked + to_analyze_horses)
+
+        for app in picked:
+            app.filter_trigger = "上新"
+            logger.info("上新 Analyzing: %s (%s)", app.title, app.region)
+            new_listing_results.append(analyze_app(app))
+
+        for app in to_analyze_horses:
+            logger.info("黑马 Analyzing: %s (%s)", app.title, app.region)
+            app_results.append(analyze_app(app))
+
+        new_ok = sum(1 for r in new_listing_results if r.success)
+        horse_ok = sum(1 for r in app_results if r.success)
+        logger.info(
+            "=== App Store 完成: 上新分析 %d/%d，黑马分析 %d/%d 成功 ===",
+            new_ok, len(new_listing_results), horse_ok, len(app_results),
+        )
+    except Exception as e:
+        logger.warning("App Store pipeline failed (non-fatal): %s", e)
+    finally:
+        if app_snapshots:
+            save_snapshots(app_snapshots)
+
+    if not results and not new_listings and not app_results and not new_listing_results:
+        logger.warning("Both pipelines empty; sending fallback notification")
+        try:
+            from notifier import _post
+            _post(f"# 黑马雷达（{beijing_today()}）\n\n⚠️ 采集阶段失败，请检查日志。")
+        except Exception:
+            pass
+        return 1
+
+    write_report(
+        results,
+        app_results=app_results,
+        new_listings=new_listings,
+        new_listing_results=new_listing_results,
+        app_pool_size=app_pool_size,
+    )
+    send_report(
+        results,
+        pages_url=_pages_url(),
+        app_results=app_results,
+        app_hits_total=app_hits_total,
+        new_listings=new_listings,
+        new_listing_results=new_listing_results,
+        app_pool_size=app_pool_size,
+        app_only=SKIP_GITHUB or not results,
+    )
     return 0
 
 

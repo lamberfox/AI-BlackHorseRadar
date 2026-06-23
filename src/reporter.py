@@ -1,8 +1,9 @@
 import html
+import os
 from pathlib import Path
 from typing import List
 
-from models import AnalysisResult
+from models import AnalysisResult, AppAnalysisResult, AppProject
 from utils import setup_logger, beijing_today
 
 logger = setup_logger(__name__)
@@ -196,9 +197,294 @@ def generate_html(results: List[AnalysisResult]) -> str:
 </html>"""
 
 
-def write_report(results: List[AnalysisResult]) -> Path:
+def _new_listing_card(app: AppProject, index: int) -> str:
+    region_flag = {"us": "🇺🇸", "jp": "🇯🇵"}.get(app.region, app.region.upper())
+    released = app.release_date[:10] if app.release_date else "未知"
+    tracked = app.first_seen[:10] if app.first_seen else "今日首次"
+    star_pct = (
+        f"{app.five_star_reviews}/{app.total_reviews} 五星"
+        if app.total_reviews else "暂无评论"
+    )
+
+    return f"""<div class="card card-watch">
+      <div class="card-header">
+        <span class="idx">#{index}</span>
+        <a href="{_e(app.html_url)}" target="_blank" class="repo-link">{_e(app.title)}</a>
+        <span class="src-badge" style="color:#58a6ff;border-color:#58a6ff44">{region_flag} {_e(app.category)}</span>
+      </div>
+      <div class="meta">
+        <span class="meta-item">上架 {released}</span>
+        <span class="meta-item">跟踪自 {tracked}</span>
+        <span class="meta-item">{_e(app.price)}</span>
+        <span class="meta-item">💬 {star_pct}</span>
+      </div>
+      <p class="desc">{_e(app.developer)}</p>
+    </div>"""
+
+
+def _new_listings_section(
+    results: List[AppAnalysisResult],
+    start_index: int,
+    pool_size: int = 0,
+) -> str:
+    if results:
+        body = "\n".join(_app_card(r, start_index + i) for i, r in enumerate(results))
+    else:
+        body = '<p class="section-empty">今日 RSS 未发现新上架 App，快照持续跟踪中。</p>'
+
+    pool_note = f"从 <strong>{pool_size}</strong> 个" if pool_size else "从采集池"
+    sub = (
+        f"来源：US/JP × 4分类 newapplications RSS（每类最多 {os.getenv('APP_RSS_LIMIT', '100')} 条），"
+        f"顾问按性价比+新颖性筛选，{pool_note} 推送 Top <strong>{len(results)}</strong> 并完成深入分析"
+    )
+    return f"""<section class="section">
+    <div class="section-header">
+      <h2>🆕 App Store 上新监控</h2>
+      <p class="section-sub">{sub}</p>
+    </div>
+    <div class="grid">{body}</div>
+  </section>"""
+
+
+def _go_no_go_color(verdict: str) -> str:
+    return {
+        "强烈跟进": "#3fb950",
+        "观望":     "#f0883e",
+        "放弃":     "#f85149",
+    }.get(verdict, "#8b949e")
+
+
+def _app_card(result: AppAnalysisResult, index: int) -> str:
+    a = result.app
+    region_flag = {"us": "🇺🇸", "jp": "🇯🇵"}.get(a.region, a.region.upper())
+    trigger_label = {
+        "A": "冷启动爆发", "B": "斜率飙升", "上新": "新上架",
+    }.get(a.filter_trigger, a.filter_trigger or "新上架")
+
+    if not result.success:
+        return f"""<div class="card card-error">
+      <div class="card-header">
+        <span class="idx">#{index}</span>
+        <a href="{_e(a.html_url)}" target="_blank" class="repo-link">{_e(a.title)}</a>
+        <span class="src-badge" style="color:#f85149;border-color:#f8514944">{region_flag} {_e(a.category)}</span>
+      </div>
+      <div class="meta">
+        <span class="meta-item">{region_flag} {_e(a.region.upper())}</span>
+        <span class="meta-item">指标{_e(a.filter_trigger)}: {_e(trigger_label)}</span>
+      </div>
+      <p class="err">⚠️ 分析失败: {_e(str(result.error))}</p>
+    </div>"""
+
+    gnc = _go_no_go_color(result.go_no_go)
+    sc = _score_color(min(result.dark_horse_score // 2, 5))
+    figma_short = result.figma_create_brief[:120] + "…" if len(result.figma_create_brief) > 120 else result.figma_create_brief
+
+    return f"""<div class="card">
+      <div class="card-header">
+        <span class="idx">#{index}</span>
+        <a href="{_e(a.html_url)}" target="_blank" class="repo-link">{_e(a.title)}</a>
+        <span class="src-badge" style="color:{gnc};border-color:{gnc}44">{_e(result.go_no_go)}</span>
+        <span class="score" style="background:{sc}22;color:{sc};border-color:{sc}55">🎯 {result.dark_horse_score}/10 · 克隆{result.clone_score}/5</span>
+      </div>
+      <div class="meta">
+        <span class="meta-item">{region_flag} {_e(a.region.upper())}</span>
+        <span class="badge">{_e(a.category)}</span>
+        <span class="badge">指标{_e(a.filter_trigger)}: {_e(trigger_label)}</span>
+        <span class="meta-item">{_e(a.price)}</span>
+        {f'<span class="meta-item">性价比 {a.roi_score}/10 · 新颖 {a.novelty_score}/10</span>' if a.roi_score or a.novelty_score else ''}
+        <span class="meta-item">🎨 美术: {_e(result.art_cost)}</span>
+        <span class="meta-item">Flutter可行性: {result.flutter_feasibility}/5</span>
+      </div>
+      <p class="desc">{_e(result.product_what)}{f' · 入选：{_e(a.pick_reason)}' if a.pick_reason else ''}</p>
+      <div class="fields">
+        {_field("⚡ 核心吸金痛点", result.pain_point)}
+        {_field("🔍 商业批判（值不值得克隆）", result.commercial_critique)}
+        {_field("📡 信号真伪", result.signal_validity)}
+        {_field("⏱️ 截流窗口", result.intercept_window)}
+        {_field("✂️ 截流改进点", result.clone_edge)}
+        {_field("🎨 Figma Create brief", figma_short)}
+        {_field("🦋 Flutter 架构", result.flutter_arch)}
+      </div>
+    </div>"""
+
+
+def _app_section(results: List[AppAnalysisResult], start_index: int) -> str:
+    cards = "\n".join(_app_card(r, start_index + i) for i, r in enumerate(results))
+    empty = """<p class="section-empty">本次未命中黑马阈值（指标A：7天内评论爆发；指标B：12小时内评论斜率飙升）。上新 App 已在上方列表持续跟踪。</p>"""
+    body = cards if results else empty
+    return f"""<section class="section">
+    <div class="section-header">
+      <h2>📱 App Store 黑马雷达</h2>
+      <p class="section-sub">来源：评论斜率过滤 + DeepSeek 独立开发者视角逆向（仅分析命中指标 A/B 的 App）</p>
+    </div>
+    <div class="grid">{body}</div>
+  </section>"""
+
+
+def generate_html(
+    results: List[AnalysisResult],
+    app_results: List[AppAnalysisResult] = None,
+    new_listings: List = None,
+    new_listing_results: List[AppAnalysisResult] = None,
+    app_pool_size: int = 0,
+) -> str:
+    if app_results is None:
+        app_results = []
+    if new_listing_results is None:
+        new_listing_results = []
+    if new_listings is None:
+        new_listings = []
+    today = beijing_today()
+    total = len(results)
+    success = sum(1 for r in results if r.success)
+
+    trending = [r for r in results if r.project.source.startswith("trending")]
+    search   = [r for r in results if r.project.source == "search"]
+
+    sec_trending = _section(
+        "🔥 GitHub Trending 热榜分析",
+        "来源：GitHub Trending 日榜 / 周榜 / 月榜，综合去重后 AI 研判",
+        trending, 1,
+    )
+    sec_search = _section(
+        "🚀 近3天高速崛起",
+        "来源：GitHub Search API — 近3天新建项目，按 Star 增速排序",
+        search, len(trending) + 1,
+    )
+    sec_new = (
+        _new_listings_section(new_listing_results, len(results) + 1, pool_size=app_pool_size)
+        if new_listings is not None else ""
+    )
+    sec_app = (
+        _app_section(app_results, len(results) + len(new_listing_results) + 1)
+        if new_listings is not None else ""
+    )
+
+    app_stats = ""
+    if new_listings is not None:
+        app_new_ok = sum(1 for r in new_listing_results if r.success)
+        app_horse_ok = sum(1 for r in app_results if r.success)
+        app_stats = (
+            f'<span>采集池 <strong>{app_pool_size}</strong> 个</span>'
+            f'<span>顾问推送 <strong>{len(new_listing_results)}</strong> 个</span>'
+            f'<span>黑马分析 <strong>{app_horse_ok}</strong> 个</span>'
+        )
+
+    return f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>GitHub 黑马技术雷达 — {today}</title>
+  <style>
+    *,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
+    body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+         background:#0d1117;color:#c9d1d9;line-height:1.65}}
+    a{{color:#58a6ff;text-decoration:none}}
+    a:hover{{text-decoration:underline}}
+
+    .site-header{{background:#161b22;border-bottom:1px solid #30363d;padding:28px 32px}}
+    .site-header h1{{font-size:1.6rem;font-weight:700;color:#f0f6fc}}
+    .site-header h1 em{{color:#f0883e;font-style:normal}}
+    .hm{{margin-top:10px;color:#8b949e;font-size:.875rem;display:flex;gap:20px;flex-wrap:wrap}}
+    .hm strong{{color:#c9d1d9}}
+
+    .container{{max-width:1500px;margin:0 auto;padding:32px 16px}}
+
+    .section{{margin-bottom:48px}}
+    .section-header{{margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid #21262d}}
+    .section-header h2{{font-size:1.2rem;font-weight:700;color:#f0f6fc}}
+    .section-sub{{color:#8b949e;font-size:.85rem;margin-top:4px}}
+
+    .grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:16px}}
+
+    .card{{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:20px;
+           transition:border-color .15s,box-shadow .15s}}
+    .card:hover{{border-color:#58a6ff55;box-shadow:0 0 0 1px #58a6ff22}}
+    .card-error{{border-color:#f8514933}}
+
+    .card-header{{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:10px}}
+    .idx{{color:#484f58;font-size:.75rem;font-weight:600;flex-shrink:0}}
+    .repo-link{{font-size:.95rem;font-weight:600;color:#58a6ff;flex:1;min-width:0;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+    .src-badge{{font-size:.7rem;border:1px solid;border-radius:20px;padding:1px 8px;
+                white-space:nowrap;flex-shrink:0}}
+    .score{{font-size:.72rem;border:1px solid;border-radius:20px;padding:2px 9px;
+            white-space:nowrap;flex-shrink:0}}
+
+    .meta{{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}}
+    .badge{{background:#21262d;color:#8b949e;border:1px solid #30363d;
+            border-radius:4px;padding:1px 7px;font-size:.73rem}}
+    .meta-item{{color:#8b949e;font-size:.78rem}}
+
+    .desc{{color:#8b949e;font-size:.83rem;margin-bottom:14px;
+           display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
+
+    .fields{{display:flex;flex-direction:column;gap:9px}}
+    .field{{display:grid;grid-template-columns:130px 1fr;gap:8px;font-size:.83rem;
+            padding:8px 10px;background:#0d1117;border-radius:6px}}
+    .fl{{color:#8b949e;font-weight:500;padding-top:1px}}
+    .fv{{color:#c9d1d9}}
+
+    .err{{color:#f85149;font-size:.83rem;margin-top:8px}}
+    .section-empty{{color:#8b949e;font-size:.9rem;padding:16px 20px;background:#161b22;
+                    border:1px dashed #30363d;border-radius:10px}}
+    .card-watch{{border-color:#21262d}}
+
+    .site-footer{{text-align:center;padding:32px;color:#484f58;font-size:.78rem;
+                  border-top:1px solid #21262d;margin-top:16px}}
+
+    @media(max-width:600px){{
+      .grid{{grid-template-columns:1fr}}
+      .field{{grid-template-columns:1fr}}
+      .fl{{margin-bottom:2px}}
+    }}
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <h1>🎯 GitHub 黑马技术雷达 <em>{today}</em></h1>
+    <div class="hm">
+      <span>采样 <strong>{total}</strong> 个项目</span>
+      <span>成功分析 <strong>{success}</strong> 个</span>
+      <span>Trending 热榜 <strong>{len(trending)}</strong> 个</span>
+      <span>近期新星 <strong>{len(search)}</strong> 个</span>
+      {app_stats}
+    </div>
+  </header>
+  <main class="container">
+    {sec_trending}
+    {sec_search}
+    {sec_new}
+    {sec_app}
+  </main>
+  <footer class="site-footer">
+    ⚠️ 本日报仅供技术研判参考，不构成任何投资建议。每日北京时间 09:00 自动更新。
+  </footer>
+</body>
+</html>"""
+
+
+def write_report(
+    results: List[AnalysisResult],
+    app_results: List[AppAnalysisResult] = None,
+    new_listings: List = None,
+    new_listing_results: List[AppAnalysisResult] = None,
+    app_pool_size: int = 0,
+) -> Path:
+    if app_results is None:
+        app_results = []
+    if new_listings is None:
+        new_listings = None
+    if new_listing_results is None:
+        new_listing_results = []
     DOCS_DIR.mkdir(exist_ok=True)
     out = DOCS_DIR / "index.html"
-    out.write_text(generate_html(results), encoding="utf-8")
+    out.write_text(
+        generate_html(
+            results, app_results, new_listings, new_listing_results, app_pool_size,
+        ),
+        encoding="utf-8",
+    )
     logger.info("HTML report written to %s (%d bytes)", out, out.stat().st_size)
     return out
