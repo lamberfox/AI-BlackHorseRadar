@@ -191,7 +191,7 @@ def generate_html(results: List[AnalysisResult]) -> str:
     {sec_search}
   </main>
   <footer class="site-footer">
-    ⚠️ 本日报仅供技术研判参考，不构成任何投资建议。每日北京时间 09:00 自动更新。
+    ⚠️ 本日报仅供技术研判参考，不构成任何投资建议。每周一北京时间 09:00 自动更新。
   </footer>
 </body>
 </html>"""
@@ -294,13 +294,20 @@ def _app_card(result: AppAnalysisResult, index: int) -> str:
         {f'<span class="meta-item">性价比 {a.roi_score}/10 · 新颖 {a.novelty_score}/10</span>' if a.roi_score or a.novelty_score else ''}
         <span class="meta-item">🎨 美术: {_e(result.art_cost)}</span>
         <span class="meta-item">Flutter可行性: {result.flutter_feasibility}/5</span>
+        {f'<span class="meta-item">置信度: {_e(result.confidence_level)}</span>' if result.confidence_level else ''}
+        {f'<span class="meta-item">需人工复核</span>' if result.needs_manual_review else ''}
       </div>
       <p class="desc">{_e(result.product_what)}{f' · 入选：{_e(a.pick_reason)}' if a.pick_reason else ''}</p>
       <div class="fields">
         {_field("⚡ 核心吸金痛点", result.pain_point)}
-        {_field("🔍 商业批判（值不值得克隆）", result.commercial_critique)}
+        {_field("💹 套利空间算账", result.arbitrage_space)}
+        {_field("⏱️ 回本周期（周）", result.payback_period_weeks)}
+        {_field("🧮 评分拆解", result.scoring_breakdown)}
+        {_field("🎯 CAC 估算", result.cac_estimate_range)}
+        {_field("🔁 转化率估算", result.conversion_estimate_range)}
+        {_field("💳 单价/ARPPU 假设", result.arppu_or_price_assumption)}
+        {_field("⛔ 一票否决风险", result.deal_breakers)}
         {_field("📡 信号真伪", result.signal_validity)}
-        {_field("⏱️ 截流窗口", result.intercept_window)}
         {_field("✂️ 截流改进点", result.clone_edge)}
         {_field("🎨 Figma Create brief", figma_short)}
         {_field("🦋 Flutter 架构", result.flutter_arch)}
@@ -459,7 +466,7 @@ def generate_html(
     {sec_app}
   </main>
   <footer class="site-footer">
-    ⚠️ 本日报仅供技术研判参考，不构成任何投资建议。每日北京时间 09:00 自动更新。
+    ⚠️ 本日报仅供技术研判参考，不构成任何投资建议。每周一北京时间 09:00 自动更新。
   </footer>
 </body>
 </html>"""

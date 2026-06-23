@@ -43,9 +43,15 @@ def _new_listings_summary(
             f"> **{i+1}.** [{app.title}]({app.html_url}) "
             f"{flag} {app.category} · 上架{released} · {r.go_no_go} · 克隆{r.clone_score}/5"
         )
-        if r.commercial_critique and r.commercial_critique != "推测依据不足":
-            critique = r.commercial_critique.replace("\n", " ")[:80]
-            lines.append(f">    ⚠️ {critique}{'…' if len(r.commercial_critique) > 80 else ''}")
+        if r.arbitrage_space and r.arbitrage_space != "推测依据不足":
+            critique = r.arbitrage_space.replace("\n", " ")[:80]
+            lines.append(f">    💹 {critique}{'…' if len(r.arbitrage_space) > 80 else ''}")
+        if r.payback_period_weeks and r.payback_period_weeks != "推测依据不足":
+            lines.append(f">    ⏱️ 回本周期：{r.payback_period_weeks}")
+        if r.confidence_level and r.confidence_level != "推测依据不足":
+            lines.append(f">    🎚️ 置信度：{r.confidence_level}")
+        if r.needs_manual_review:
+            lines.append(">    ⚠️ 需人工复核")
         elif app.roi_score or app.novelty_score:
             pr = app.pick_reason[:50] + ("…" if len(app.pick_reason) > 50 else "")
             lines.append(
@@ -97,9 +103,15 @@ def _black_horse_summary(
             f"> **{i+1}.** [{r.app.title}]({r.app.html_url}) "
             f"{flag} {r.app.category} · 指标{trigger} · {r.go_no_go} · 克隆{r.clone_score}/5"
         )
-        if r.commercial_critique and r.commercial_critique != "推测依据不足":
-            critique = r.commercial_critique.replace("\n", " ")[:80]
-            lines.append(f">    ⚠️ {critique}{'…' if len(r.commercial_critique) > 80 else ''}")
+        if r.arbitrage_space and r.arbitrage_space != "推测依据不足":
+            critique = r.arbitrage_space.replace("\n", " ")[:80]
+            lines.append(f">    💹 {critique}{'…' if len(r.arbitrage_space) > 80 else ''}")
+        if r.payback_period_weeks and r.payback_period_weeks != "推测依据不足":
+            lines.append(f">    ⏱️ 回本周期：{r.payback_period_weeks}")
+        if r.confidence_level and r.confidence_level != "推测依据不足":
+            lines.append(f">    🎚️ 置信度：{r.confidence_level}")
+        if r.needs_manual_review:
+            lines.append(">    ⚠️ 需人工复核")
 
     more = ""
     if hits > len(success):

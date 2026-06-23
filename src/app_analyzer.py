@@ -96,25 +96,80 @@ def analyze_app(app: AppProject) -> AppAnalysisResult:
             except (ValueError, TypeError):
                 return default
 
+        def _f(key: str, default: float = 0.0) -> float:
+            try:
+                return float(data.get(key, default))
+            except (ValueError, TypeError):
+                return default
+
+        def _b(key: str, default: bool = False) -> bool:
+            v = data.get(key, default)
+            if isinstance(v, bool):
+                return v
+            if isinstance(v, str):
+                return v.strip().lower() in ("true", "1", "yes", "y")
+            return bool(v)
+
+        def _extract_payback_weeks() -> float:
+            direct = data.get("payback_period_weeks", 0)
+            try:
+                return float(direct)
+            except (TypeError, ValueError):
+                m = re.search(r"(\d+(?:\.\d+)?)", str(direct))
+                return float(m.group(1)) if m else 99.0
+
+        def _extract_total_score() -> float:
+            # Priority: explicit total_score field, else parse scoring_breakdown text
+            if "total_score" in data:
+                return _f("total_score", 0.0)
+            text = str(data.get("scoring_breakdown", ""))
+            m = re.search(r"total[_\s-]*score\s*=\s*(\d+(?:\.\d+)?)", text, re.I)
+            if m:
+                return float(m.group(1))
+            # fallback from dark_horse_score -> rough proxy
+            return _i("dark_horse_score", 0) * 10.0
+
+        def _rule_based_verdict(total_score: float, payback_weeks: float) -> str:
+            if total_score >= 75.0 and payback_weeks <= 6.0:
+                return "强烈跟进"
+            if total_score < 55.0 or payback_weeks > 12.0:
+                return "放弃"
+            return "观望"
+
         figma_brief = _s("figma_create_brief")
         if figma_brief == "推测依据不足":
             figma_brief = _s("v0_prompt")  # backward compat
 
+        payback_weeks = _extract_payback_weeks()
+        total_score = _extract_total_score()
+        model_verdict = _s("go_no_go")
+        rule_verdict = _rule_based_verdict(total_score, payback_weeks)
+        needs_review = _b("needs_manual_review", False) or (model_verdict != rule_verdict)
+
         return AppAnalysisResult(
             app=app,
             product_what=_s("product_what"),
-            go_no_go=_s("go_no_go"),
+            go_no_go=rule_verdict,
             dark_horse_score=_i("dark_horse_score"),
             clone_score=_i("clone_score"),
             signal_validity=_s("signal_validity"),
-            intercept_window=_s("intercept_window"),
+            arbitrage_space=_s("arbitrage_space"),
+            payback_period_weeks=str(data.get("payback_period_weeks", "推测依据不足")),
+            intercept_window=_s("payback_period_weeks") if _s("payback_period_weeks") != "推测依据不足" else _s("intercept_window"),
             pain_point=_s("pain_point"),
-            commercial_critique=_s("commercial_critique"),
+            commercial_critique=_s("arbitrage_space") if _s("arbitrage_space") != "推测依据不足" else _s("commercial_critique"),
             figma_create_brief=figma_brief,
             flutter_arch=_s("flutter_arch"),
             clone_edge=_s("clone_edge"),
             art_cost=_s("art_cost"),
             flutter_feasibility=_i("flutter_feasibility"),
+            scoring_breakdown=_s("scoring_breakdown"),
+            cac_estimate_range=_s("cac_estimate_range"),
+            conversion_estimate_range=_s("conversion_estimate_range"),
+            arppu_or_price_assumption=_s("arppu_or_price_assumption"),
+            confidence_level=_s("confidence_level"),
+            needs_manual_review=needs_review,
+            deal_breakers=_s("deal_breakers"),
             v0_prompt=figma_brief,
         )
     except Exception as e:

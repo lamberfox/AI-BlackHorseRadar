@@ -68,8 +68,19 @@ class AppAnalysisResult:
     dark_horse_score: int = 0
     clone_score: int = 0
     signal_validity: str = ""
+    arbitrage_space: str = ""
+    payback_period_weeks: str = ""
+    scoring_breakdown: str = ""
+    cac_estimate_range: str = ""
+    conversion_estimate_range: str = ""
+    arppu_or_price_assumption: str = ""
+    confidence_level: str = ""
+    needs_manual_review: bool = False
+    deal_breakers: str = ""
+    # legacy alias from previous prompt version
     intercept_window: str = ""
     pain_point: str = ""
+    # legacy alias from previous prompt version
     commercial_critique: str = ""
     figma_create_brief: str = ""
     flutter_arch: str = ""
