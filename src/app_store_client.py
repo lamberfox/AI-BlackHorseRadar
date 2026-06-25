@@ -108,6 +108,15 @@ def _is_excluded(app: AppProject) -> bool:
     return any(kw in dev for kw in EXCLUDE_PUBLISHERS)
 
 
+def _normalize_entries(raw) -> List[dict]:
+    """iTunes RSS returns a single dict when there is only one entry."""
+    if not raw:
+        return []
+    if isinstance(raw, dict):
+        return [raw]
+    return list(raw)
+
+
 def fetch_new_apps(region: str, genre_id: str, category_label: str) -> List[AppProject]:
     url = RSS_URL.format(region=region, limit=RSS_LIMIT, genre_id=genre_id)
     try:
@@ -118,7 +127,7 @@ def fetch_new_apps(region: str, genre_id: str, category_label: str) -> List[AppP
 
     # Legacy iTunes RSS uses feed.entry (list of dicts with nested labels)
     # Apple ignores the limit param; enforce our own cap (newest-first order)
-    entries = data.get("feed", {}).get("entry", [])[:RSS_LIMIT]
+    entries = _normalize_entries(data.get("feed", {}).get("entry", []))[:RSS_LIMIT]
     apps = []
     for entry in entries:
         app_id = entry.get("id", {}).get("attributes", {}).get("im:id", "")
@@ -161,7 +170,7 @@ def fetch_reviews(region: str, app_id: str) -> Tuple[int, int, List[str]]:
         logger.warning("Reviews fetch failed for app %s: %s", app_id, e)
         return 0, 0, []
 
-    entries = data.get("feed", {}).get("entry", [])
+    entries = _normalize_entries(data.get("feed", {}).get("entry", []))
     if not entries:
         return 0, 0, []
 

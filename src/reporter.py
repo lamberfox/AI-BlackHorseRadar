@@ -1,7 +1,7 @@
 import html
 import os
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from models import AnalysisResult, AppAnalysisResult, AppProject
 from utils import setup_logger, beijing_today
@@ -9,6 +9,7 @@ from utils import setup_logger, beijing_today
 logger = setup_logger(__name__)
 
 DOCS_DIR = Path(__file__).parent.parent / "docs"
+ARCHIVE_DIR = Path(__file__).parent.parent / "knowledge"
 
 _SOURCE_LABEL = {
     "search":           ("🚀", "近3天新星", "#1f6feb"),
@@ -472,6 +473,296 @@ def generate_html(
 </html>"""
 
 
+def _md_one_line(text: str) -> str:
+    return str(text).replace("\r\n", "\n").replace("\n", " ").strip()
+
+
+def _md_field(label: str, value: str) -> str:
+    v = _md_one_line(value)
+    if not v or v == "推测依据不足":
+        return ""
+    return f"- **{label}**：{v}\n"
+
+
+def _md_github_card(result: AnalysisResult, index: int) -> str:
+    p = result.project
+    icon, label, _ = _SOURCE_LABEL.get(p.source, ("·", p.source, "#8b949e"))
+    lang = f" · {p.language}" if p.language else ""
+    created = f" · 创建 {p.created_at[:10]}" if p.created_at else ""
+
+    if not result.success:
+        return (
+            f"### #{index} [{p.full_name}]({p.html_url})\n\n"
+            f"{icon} {label}{lang} · ⭐ {p.stargazers_count:,}{created}\n\n"
+            f"> ⚠️ 分析失败: {result.error}\n"
+        )
+
+    fields = "".join(
+        _md_field(k, v)
+        for k, v in [
+            ("生产力置换", result.productivity_replacement),
+            ("技术壁垒", result.architecture_core),
+            ("生态卡位", result.glue_cement_grade),
+            ("TPD 变现路径", result.tpd_potential),
+            ("变现切入点", result.monetization_angle),
+            ("可落地产品形态", result.product_form),
+            ("巨头背刺风险", result.backstab_risk),
+        ]
+    )
+    return (
+        f"### #{index} [{p.full_name}]({p.html_url})\n\n"
+        f"{icon} {label}{lang} · ⭐ {p.stargazers_count:,}{created} · "
+        f"{'★' * result.dark_horse_score}{'☆' * (5 - result.dark_horse_score)} {result.dark_horse_score}/5\n\n"
+        f"{_md_one_line(p.description)}\n\n"
+        f"{fields}\n"
+    )
+
+
+def _md_app_card(result: AppAnalysisResult, index: int) -> str:
+    a = result.app
+    region_flag = {"us": "🇺🇸", "jp": "🇯🇵"}.get(a.region, a.region.upper())
+    trigger_label = {
+        "A": "冷启动爆发", "B": "斜率飙升", "上新": "新上架",
+    }.get(a.filter_trigger, a.filter_trigger or "新上架")
+
+    if not result.success:
+        return (
+            f"### #{index} [{a.title}]({a.html_url})\n\n"
+            f"{region_flag} {a.category} · 指标{a.filter_trigger}: {trigger_label}\n\n"
+            f"> ⚠️ 分析失败: {result.error}\n"
+        )
+
+    pick = f" · 入选：{_md_one_line(a.pick_reason)}" if a.pick_reason else ""
+    roi = (
+        f" · 性价比 {a.roi_score}/10 · 新颖 {a.novelty_score}/10"
+        if a.roi_score or a.novelty_score else ""
+    )
+    fields = "".join(
+        _md_field(k, v)
+        for k, v in [
+            ("核心吸金痛点", result.pain_point),
+            ("套利空间算账", result.arbitrage_space),
+            ("回本周期（周）", result.payback_period_weeks),
+            ("评分拆解", result.scoring_breakdown),
+            ("CAC 估算", result.cac_estimate_range),
+            ("转化率估算", result.conversion_estimate_range),
+            ("单价/ARPPU 假设", result.arppu_or_price_assumption),
+            ("一票否决风险", result.deal_breakers),
+            ("信号真伪", result.signal_validity),
+            ("截流改进点", result.clone_edge),
+            ("Figma Create brief", result.figma_create_brief),
+            ("Flutter 架构", result.flutter_arch),
+        ]
+    )
+    return (
+        f"### #{index} [{a.title}]({a.html_url})\n\n"
+        f"**{result.go_no_go}** · 🎯 {result.dark_horse_score}/10 · 克隆 {result.clone_score}/5\n\n"
+        f"{region_flag} {a.region.upper()} · {a.category} · 指标{a.filter_trigger}: {trigger_label}"
+        f" · {a.price}{roi} · 美术 {result.art_cost} · Flutter {result.flutter_feasibility}/5"
+        f"{f' · 置信度 {result.confidence_level}' if result.confidence_level else ''}"
+        f"{' · ⚠️ 需人工复核' if result.needs_manual_review else ''}\n\n"
+        f"{_md_one_line(result.product_what)}{pick}\n\n"
+        f"{fields}\n"
+    )
+
+
+def generate_markdown(
+    results: List[AnalysisResult],
+    app_results: Optional[List[AppAnalysisResult]] = None,
+    new_listings: Optional[List] = None,
+    new_listing_results: Optional[List[AppAnalysisResult]] = None,
+    app_pool_size: int = 0,
+    date: Optional[str] = None,
+) -> str:
+    if app_results is None:
+        app_results = []
+    if new_listing_results is None:
+        new_listing_results = []
+    include_app = new_listings is not None
+    if new_listings is None:
+        new_listings = []
+
+    today = date or beijing_today()
+    total = len(results)
+    success = sum(1 for r in results if r.success)
+    trending = [r for r in results if r.project.source.startswith("trending")]
+    search = [r for r in results if r.project.source == "search"]
+    app_horse_ok = sum(1 for r in app_results if r.success)
+
+    fm = [
+        "---",
+        f"date: {today}",
+        "tags:",
+        "  - 黑马雷达",
+        "  - 日报",
+        "type: daily-report",
+        f"github_total: {total}",
+        f"github_success: {success}",
+        f"github_trending: {len(trending)}",
+        f"github_search: {len(search)}",
+    ]
+    if include_app:
+        fm.extend([
+            f"app_pool: {app_pool_size}",
+            f"app_pushed: {len(new_listing_results)}",
+            f"app_black_horse: {app_horse_ok}",
+        ])
+    fm.append("---")
+
+    lines = [
+        "\n".join(fm) + "\n",
+        f"# 黑马雷达日报 — {today}\n",
+        f"> 采样 **{total}** 个项目，成功分析 **{success}** 个"
+        f" · Trending **{len(trending)}** · 近期新星 **{len(search)}**",
+    ]
+    if include_app:
+        lines[-1] += (
+            f" · App 采集池 **{app_pool_size}**"
+            f" · 顾问推送 **{len(new_listing_results)}**"
+            f" · 黑马分析 **{app_horse_ok}**"
+        )
+    lines.append("\n---\n")
+
+    if trending:
+        lines.append("\n## 🔥 GitHub Trending 热榜分析\n")
+        lines.append("*来源：GitHub Trending 日榜 / 周榜 / 月榜，综合去重后 AI 研判*\n")
+        for i, r in enumerate(trending, 1):
+            lines.append(_md_github_card(r, i))
+
+    if search:
+        lines.append("\n## 🚀 近3天高速崛起\n")
+        lines.append("*来源：GitHub Search API — 近3天新建项目，按 Star 增速排序*\n")
+        for i, r in enumerate(search, len(trending) + 1):
+            lines.append(_md_github_card(r, i))
+
+    if include_app:
+        pool_note = f"从 **{app_pool_size}** 个" if app_pool_size else "从采集池"
+        rss_limit = os.getenv("APP_RSS_LIMIT", "100")
+        lines.append("\n## 🆕 App Store 上新监控\n")
+        lines.append(
+            f"*来源：US/JP × 4分类 newapplications RSS（每类最多 {rss_limit} 条），"
+            f"顾问按性价比+新颖性筛选，{pool_note} 推送 Top **{len(new_listing_results)}** 并完成深入分析*\n"
+        )
+        if new_listing_results:
+            base = len(results) + 1
+            for i, r in enumerate(new_listing_results, base):
+                lines.append(_md_app_card(r, i))
+        else:
+            lines.append("> 今日 RSS 未发现新上架 App，快照持续跟踪中。\n")
+
+        lines.append("\n## 📱 App Store 黑马雷达\n")
+        lines.append(
+            "*来源：评论斜率过滤 + DeepSeek 独立开发者视角逆向（仅分析命中指标 A/B 的 App）*\n"
+        )
+        if app_results:
+            base = len(results) + len(new_listing_results) + 1
+            for i, r in enumerate(app_results, base):
+                lines.append(_md_app_card(r, i))
+        else:
+            lines.append(
+                "> 本次未命中黑马阈值（指标A：7天内评论爆发；指标B：12小时内评论斜率飙升）。"
+                "上新 App 已在上方列表持续跟踪。\n"
+            )
+
+    lines.append("\n---\n\n*⚠️ 本日报仅供技术研判参考，不构成任何投资建议。*\n")
+    return "".join(lines)
+
+
+_INDEX_START = "<!-- radar-index -->"
+_INDEX_END = "<!-- /radar-index -->"
+_VAULT_HOME = "首页.md"
+
+
+def _ensure_vault_scaffold() -> None:
+    """Create Obsidian vault scaffold once (safe to re-run)."""
+    ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
+    gitignore = ARCHIVE_DIR / ".gitignore"
+    if not gitignore.exists():
+        gitignore.write_text(
+            "# Obsidian — 仅忽略本机状态，配置可入库\n"
+            ".obsidian/workspace.json\n"
+            ".obsidian/workspace-mobile.json\n"
+            ".obsidian/plugins/\n"
+            ".obsidian/themes/\n"
+            ".trash/\n",
+            encoding="utf-8",
+        )
+
+    obsidian = ARCHIVE_DIR / ".obsidian"
+    obsidian.mkdir(parents=True, exist_ok=True)
+    daily = obsidian / "daily-notes.json"
+    if not daily.exists():
+        daily.write_text(
+            '{\n  "format": "YYYY-MM-DD",\n  "folder": "",\n  "template": ""\n}\n',
+            encoding="utf-8",
+        )
+    app_json = obsidian / "app.json"
+    if not app_json.exists():
+        app_json.write_text(
+            '{\n  "readableLineLength": 120,\n  "showFrontmatter": true\n}\n',
+            encoding="utf-8",
+        )
+
+    home = ARCHIVE_DIR / _VAULT_HOME
+    if not home.exists():
+        home.write_text(
+            "# 黑马雷达知识库\n\n"
+            "在 Obsidian 中 **打开本文件夹**（`knowledge/`）作为仓库即可。\n\n"
+            "雷达每次跑完会自动写入 `YYYY-MM-DD.md` 日报，并更新下方索引。\n\n"
+            "## 日报索引\n\n"
+            f"{_INDEX_START}\n"
+            f"{_INDEX_END}\n",
+            encoding="utf-8",
+        )
+
+
+def _update_vault_index(day: str) -> None:
+    """Prepend today's note link to 首页.md (Obsidian wikilink)."""
+    home = ARCHIVE_DIR / _VAULT_HOME
+    if not home.exists():
+        _ensure_vault_scaffold()
+    text = home.read_text(encoding="utf-8")
+    link = f"- [[{day}]]"
+    if _INDEX_START not in text or _INDEX_END not in text:
+        text += f"\n## 日报索引\n\n{_INDEX_START}\n{_INDEX_END}\n"
+    start = text.index(_INDEX_START) + len(_INDEX_START)
+    end = text.index(_INDEX_END)
+    block = text[start:end]
+    if f"[[{day}]]" in block:
+        return
+    insertion = f"\n{link}" if block.strip() else f"\n{link}\n"
+    text = text[:start] + insertion + block + text[end:]
+    home.write_text(text, encoding="utf-8")
+
+
+def archive_report(
+    results: List[AnalysisResult],
+    app_results: Optional[List[AppAnalysisResult]] = None,
+    new_listings: Optional[List] = None,
+    new_listing_results: Optional[List[AppAnalysisResult]] = None,
+    app_pool_size: int = 0,
+    date: Optional[str] = None,
+) -> Path:
+    """Write daily Markdown archive to knowledge/YYYY-MM-DD.md (Obsidian vault)."""
+    if app_results is None:
+        app_results = []
+    if new_listing_results is None:
+        new_listing_results = []
+    day = date or beijing_today()
+    _ensure_vault_scaffold()
+    out = ARCHIVE_DIR / f"{day}.md"
+    out.write_text(
+        generate_markdown(
+            results, app_results, new_listings, new_listing_results, app_pool_size,
+            date=day,
+        ),
+        encoding="utf-8",
+    )
+    _update_vault_index(day)
+    logger.info("Markdown archive written to %s (%d bytes)", out, out.stat().st_size)
+    return out
+
+
 def write_report(
     results: List[AnalysisResult],
     app_results: List[AppAnalysisResult] = None,
@@ -494,4 +785,7 @@ def write_report(
         encoding="utf-8",
     )
     logger.info("HTML report written to %s (%d bytes)", out, out.stat().st_size)
+    archive_report(
+        results, app_results, new_listings, new_listing_results, app_pool_size,
+    )
     return out

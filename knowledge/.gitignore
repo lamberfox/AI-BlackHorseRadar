@@ -1,0 +1,6 @@
+# Obsidian — 仅忽略本机状态，配置可入库
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/plugins/
+.obsidian/themes/
+.trash/

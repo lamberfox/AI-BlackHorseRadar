@@ -16,7 +16,7 @@ from app_analyzer import analyze_app, rank_apps_for_push
 from notifier import send_report
 from reporter import write_report
 from models import Project, AnalysisResult, AppProject, AppAnalysisResult
-from utils import setup_logger, beijing_today
+from utils import setup_logger
 
 logger = setup_logger("main")
 
@@ -85,6 +85,7 @@ def _run_github_pipeline() -> List[AnalysisResult]:
 
 def main() -> int:
     results: List[AnalysisResult] = []
+    github_pipeline_ok = True
     if SKIP_GITHUB:
         logger.info("SKIP_GITHUB=1 — 跳过 GitHub 管道")
     else:
@@ -96,6 +97,7 @@ def main() -> int:
     app_pool_size = 0
     app_snapshots = {}
     app_hits_total = 0
+    app_pipeline_ok = True
     try:
         logger.info("=== App Store 雷达 启动 ===")
         new_pool, black_horses, app_snapshots = fetch_app_store_data()
@@ -132,18 +134,18 @@ def main() -> int:
             new_ok, len(new_listing_results), horse_ok, len(app_results),
         )
     except Exception as e:
-        logger.warning("App Store pipeline failed (non-fatal): %s", e)
+        app_pipeline_ok = False
+        logger.warning("App Store pipeline failed (non-fatal): %s: %s", type(e).__name__, e, exc_info=True)
     finally:
         if app_snapshots:
             save_snapshots(app_snapshots)
 
+    if not SKIP_GITHUB and (not github_pipeline_ok or not app_pipeline_ok):
+        logger.warning("Pipeline incomplete; skip WeCom push (requires GitHub + App Store both completed)")
+        return 1
+
     if not results and not new_listings and not app_results and not new_listing_results:
-        logger.warning("Both pipelines empty; sending fallback notification")
-        try:
-            from notifier import _post
-            _post(f"# 黑马雷达（{beijing_today()}）\n\n⚠️ 采集阶段失败，请检查日志。")
-        except Exception:
-            pass
+        logger.warning("Both pipelines empty; skip WeCom push")
         return 1
 
     write_report(
