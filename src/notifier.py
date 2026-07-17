@@ -135,6 +135,7 @@ def send_report(
     new_listing_results: List[AppAnalysisResult] = None,
     app_pool_size: int = 0,
     app_only: bool = False,
+    github_only: bool = False,
 ) -> bool:
     if app_results is None:
         app_results = []
@@ -146,22 +147,9 @@ def send_report(
     total = len(results)
     success = sum(1 for r in results if r.success)
 
-    app_block = _new_listings_summary(
-        new_listing_results,
-        app_pool_size=app_pool_size,
-    ) + _black_horse_summary(
-        app_results, app_hits_total=app_hits_total, pages_url=pages_url,
-    )
-    link_line = f"\n**[📊 点击查看完整日报 →]({pages_url})**\n" if pages_url else ""
+    link_line = f"\n**[📊 点击查看完整报告 →]({pages_url})**\n" if pages_url else ""
 
-    if app_only:
-        msg = (
-            f"# 📱 App Store 雷达（{today}）\n"
-            f"{link_line}"
-            f"{app_block}\n\n"
-            f"> ⚠️ 本日报仅供技术研判参考，不构成任何投资建议。"
-        )
-    else:
+    if github_only:
         top3 = [r for r in results if r.success][:3]
         top3_lines = "\n".join(
             f"> **{i+1}.** [{r.project.full_name}]({r.project.html_url}) "
@@ -172,9 +160,42 @@ def send_report(
             f"# 🎯 GitHub 黑马技术雷达（{today}）\n\n"
             f"> 采样 **{total}** 个项目，成功分析 **{success}** 个\n\n"
             f"{top3_lines}\n"
+            f"{link_line}\n"
+            f"> ⚠️ 本周报仅供技术研判参考，不构成任何投资建议。"
+        )
+    elif app_only:
+        app_block = _new_listings_summary(
+            new_listing_results,
+            app_pool_size=app_pool_size,
+        ) + _black_horse_summary(
+            app_results, app_hits_total=app_hits_total, pages_url=pages_url,
+        )
+        msg = (
+            f"# 📱 App Store 雷达（{today}）\n"
             f"{link_line}"
             f"{app_block}\n\n"
             f"> ⚠️ 本日报仅供技术研判参考，不构成任何投资建议。"
+        )
+    else:
+        app_block = _new_listings_summary(
+            new_listing_results,
+            app_pool_size=app_pool_size,
+        ) + _black_horse_summary(
+            app_results, app_hits_total=app_hits_total, pages_url=pages_url,
+        )
+        top3 = [r for r in results if r.success][:3]
+        top3_lines = "\n".join(
+            f"> **{i+1}.** [{r.project.full_name}]({r.project.html_url}) "
+            f"{'★' * r.dark_horse_score}{'☆' * (5 - r.dark_horse_score)}"
+            for i, r in enumerate(top3)
+        )
+        msg = (
+            f"# 🎯 黑马技术雷达（{today}）\n\n"
+            f"> 采样 **{total}** 个项目，成功分析 **{success}** 个\n\n"
+            f"{top3_lines}\n"
+            f"{link_line}"
+            f"{app_block}\n\n"
+            f"> ⚠️ 本报告仅供技术研判参考，不构成任何投资建议。"
         )
 
     try:
@@ -184,7 +205,7 @@ def send_report(
     except Exception as e:
         logger.error("Failed to send WeCom notification: %s", e)
         try:
-            _post(f"# GitHub 黑马雷达（{today}）\n\n⚠️ 通知发送失败，请查看 Actions 日志。")
+            _post(f"# 黑马雷达（{today}）\n\n⚠️ 通知发送失败，请查看 Actions 日志。")
         except Exception:
             pass
         return False

@@ -1,5 +1,6 @@
 import html
 import os
+import re
 from pathlib import Path
 from typing import List, Optional
 
@@ -10,6 +11,36 @@ logger = setup_logger(__name__)
 
 DOCS_DIR = Path(__file__).parent.parent / "docs"
 ARCHIVE_DIR = Path(__file__).parent.parent / "knowledge"
+
+
+def _marked(name: str, body: str) -> str:
+    return f"<!-- section:{name} -->\n{body}\n<!-- /section:{name} -->"
+
+
+def _extract_marked(text: str, name: str) -> str:
+    pat = rf"<!-- section:{re.escape(name)} -->.*?<!-- /section:{re.escape(name)} -->"
+    m = re.search(pat, text, flags=re.DOTALL)
+    return m.group(0) if m else ""
+
+
+def _replace_marked(text: str, name: str, replacement: str) -> str:
+    pat = rf"<!-- section:{re.escape(name)} -->.*?<!-- /section:{re.escape(name)} -->"
+    if not re.search(pat, text, flags=re.DOTALL):
+        return text
+    return re.sub(pat, lambda _: replacement, text, count=1, flags=re.DOTALL)
+
+
+def _merge_marked_sections(
+    new_text: str,
+    old_text: str,
+    names: List[str],
+) -> str:
+    merged = new_text
+    for name in names:
+        old_sec = _extract_marked(old_text, name)
+        if old_sec:
+            merged = _replace_marked(merged, name, old_sec)
+    return merged
 
 _SOURCE_LABEL = {
     "search":           ("🚀", "近3天新星", "#1f6feb"),
@@ -90,112 +121,16 @@ def _section(title: str, subtitle: str, results: List[AnalysisResult], start_ind
   </section>"""
 
 
-def generate_html(results: List[AnalysisResult]) -> str:
-    today = beijing_today()
-    total = len(results)
-    success = sum(1 for r in results if r.success)
 
-    trending = [r for r in results if r.project.source.startswith("trending")]
-    search   = [r for r in results if r.project.source == "search"]
-
-    sec_trending = _section(
-        "🔥 GitHub Trending 热榜分析",
-        "来源：GitHub Trending 日榜 / 周榜 / 月榜，综合去重后 AI 研判",
-        trending, 1,
-    )
-    sec_search = _section(
-        "🚀 近3天高速崛起",
-        "来源：GitHub Search API — 近3天新建项目，按 Star 增速排序",
-        search, len(trending) + 1,
-    )
-
-    return f"""<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>GitHub 黑马技术雷达 — {today}</title>
-  <style>
-    *,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
-    body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
-         background:#0d1117;color:#c9d1d9;line-height:1.65}}
-    a{{color:#58a6ff;text-decoration:none}}
-    a:hover{{text-decoration:underline}}
-
-    .site-header{{background:#161b22;border-bottom:1px solid #30363d;padding:28px 32px}}
-    .site-header h1{{font-size:1.6rem;font-weight:700;color:#f0f6fc}}
-    .site-header h1 em{{color:#f0883e;font-style:normal}}
-    .hm{{margin-top:10px;color:#8b949e;font-size:.875rem;display:flex;gap:20px;flex-wrap:wrap}}
-    .hm strong{{color:#c9d1d9}}
-
-    .container{{max-width:1500px;margin:0 auto;padding:32px 16px}}
-
-    .section{{margin-bottom:48px}}
-    .section-header{{margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid #21262d}}
-    .section-header h2{{font-size:1.2rem;font-weight:700;color:#f0f6fc}}
-    .section-sub{{color:#8b949e;font-size:.85rem;margin-top:4px}}
-
-    .grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:16px}}
-
-    .card{{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:20px;
-           transition:border-color .15s,box-shadow .15s}}
-    .card:hover{{border-color:#58a6ff55;box-shadow:0 0 0 1px #58a6ff22}}
-    .card-error{{border-color:#f8514933}}
-
-    .card-header{{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:10px}}
-    .idx{{color:#484f58;font-size:.75rem;font-weight:600;flex-shrink:0}}
-    .repo-link{{font-size:.95rem;font-weight:600;color:#58a6ff;flex:1;min-width:0;
-                white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
-    .src-badge{{font-size:.7rem;border:1px solid;border-radius:20px;padding:1px 8px;
-                white-space:nowrap;flex-shrink:0}}
-    .score{{font-size:.72rem;border:1px solid;border-radius:20px;padding:2px 9px;
-            white-space:nowrap;flex-shrink:0}}
-
-    .meta{{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}}
-    .badge{{background:#21262d;color:#8b949e;border:1px solid #30363d;
-            border-radius:4px;padding:1px 7px;font-size:.73rem}}
-    .meta-item{{color:#8b949e;font-size:.78rem}}
-
-    .desc{{color:#8b949e;font-size:.83rem;margin-bottom:14px;
-           display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
-
-    .fields{{display:flex;flex-direction:column;gap:9px}}
-    .field{{display:grid;grid-template-columns:130px 1fr;gap:8px;font-size:.83rem;
-            padding:8px 10px;background:#0d1117;border-radius:6px}}
-    .fl{{color:#8b949e;font-weight:500;padding-top:1px}}
-    .fv{{color:#c9d1d9}}
-
-    .err{{color:#f85149;font-size:.83rem;margin-top:8px}}
-
-    .site-footer{{text-align:center;padding:32px;color:#484f58;font-size:.78rem;
-                  border-top:1px solid #21262d;margin-top:16px}}
-
-    @media(max-width:600px){{
-      .grid{{grid-template-columns:1fr}}
-      .field{{grid-template-columns:1fr}}
-      .fl{{margin-bottom:2px}}
-    }}
-  </style>
-</head>
-<body>
-  <header class="site-header">
-    <h1>🎯 GitHub 黑马技术雷达 <em>{today}</em></h1>
-    <div class="hm">
-      <span>采样 <strong>{total}</strong> 个项目</span>
-      <span>成功分析 <strong>{success}</strong> 个</span>
-      <span>Trending 热榜 <strong>{len(trending)}</strong> 个</span>
-      <span>近期新星 <strong>{len(search)}</strong> 个</span>
+def _section_placeholder(title: str, subtitle: str, hint: str) -> str:
+    return f"""<section class="section">
+    <div class="section-header">
+      <h2>{title}</h2>
+      <p class="section-sub">{subtitle}</p>
     </div>
-  </header>
-  <main class="container">
-    {sec_trending}
-    {sec_search}
-  </main>
-  <footer class="site-footer">
-    ⚠️ 本日报仅供技术研判参考，不构成任何投资建议。每周一北京时间 09:00 自动更新。
-  </footer>
-</body>
-</html>"""
+    <p class="section-empty">{hint}</p>
+  </section>"""
+
 
 
 def _new_listing_card(app: AppProject, index: int) -> str:
@@ -231,7 +166,7 @@ def _new_listings_section(
     if results:
         body = "\n".join(_app_card(r, start_index + i) for i, r in enumerate(results))
     else:
-        body = '<p class="section-empty">今日 RSS 未发现新上架 App，快照持续跟踪中。</p>'
+        body = '<p class="section-empty">今日无首次上新候选（已去重或 RSS 为空），快照持续跟踪中。</p>'
 
     pool_note = f"从 <strong>{pool_size}</strong> 个" if pool_size else "从采集池"
     sub = (
@@ -340,8 +275,10 @@ def generate_html(
         app_results = []
     if new_listing_results is None:
         new_listing_results = []
+    include_app = new_listings is not None
     if new_listings is None:
         new_listings = []
+
     today = beijing_today()
     total = len(results)
     success = sum(1 for r in results if r.success)
@@ -349,41 +286,80 @@ def generate_html(
     trending = [r for r in results if r.project.source.startswith("trending")]
     search   = [r for r in results if r.project.source == "search"]
 
-    sec_trending = _section(
-        "🔥 GitHub Trending 热榜分析",
-        "来源：GitHub Trending 日榜 / 周榜 / 月榜，综合去重后 AI 研判",
-        trending, 1,
+    gh_sub_trending = "来源：GitHub Trending 日榜 / 周榜 / 月榜，综合去重后 AI 研判"
+    gh_sub_search = "来源：GitHub Search API — 近3天新建项目，按 Star 增速排序"
+    gh_hint = "等待周一 GitHub 周报更新。"
+
+    raw_trending = _section(
+        "🔥 GitHub Trending 热榜分析", gh_sub_trending, trending, 1,
     )
-    sec_search = _section(
-        "🚀 近3天高速崛起",
-        "来源：GitHub Search API — 近3天新建项目，按 Star 增速排序",
-        search, len(trending) + 1,
+    raw_search = _section(
+        "🚀 近3天高速崛起", gh_sub_search, search, len(trending) + 1,
     )
-    sec_new = (
-        _new_listings_section(new_listing_results, len(results) + 1, pool_size=app_pool_size)
-        if new_listings is not None else ""
+    sec_trending = _marked(
+        "github-trending",
+        raw_trending or _section_placeholder(
+            "🔥 GitHub Trending 热榜分析", gh_sub_trending, gh_hint,
+        ),
     )
-    sec_app = (
-        _app_section(app_results, len(results) + len(new_listing_results) + 1)
-        if new_listings is not None else ""
+    sec_search = _marked(
+        "github-search",
+        raw_search or _section_placeholder(
+            "🚀 近3天高速崛起", gh_sub_search, gh_hint,
+        ),
     )
 
-    app_stats = ""
-    if new_listings is not None:
-        app_new_ok = sum(1 for r in new_listing_results if r.success)
+    if include_app:
+        sec_new = _marked(
+            "app-new",
+            _new_listings_section(
+                new_listing_results, len(results) + 1, pool_size=app_pool_size,
+            ),
+        )
+        sec_app = _marked(
+            "app-horse",
+            _app_section(app_results, len(results) + len(new_listing_results) + 1),
+        )
         app_horse_ok = sum(1 for r in app_results if r.success)
-        app_stats = (
+        app_stats_inner = (
             f'<span>采集池 <strong>{app_pool_size}</strong> 个</span>'
             f'<span>顾问推送 <strong>{len(new_listing_results)}</strong> 个</span>'
             f'<span>黑马分析 <strong>{app_horse_ok}</strong> 个</span>'
         )
+    else:
+        sec_new = _marked(
+            "app-new",
+            _section_placeholder(
+                "🆕 App Store 上新监控",
+                "来源：US/JP × 4分类 newapplications RSS",
+                "等待 App Store 日报更新。",
+            ),
+        )
+        sec_app = _marked(
+            "app-horse",
+            _section_placeholder(
+                "📱 App Store 黑马雷达",
+                "来源：评论斜率过滤 + DeepSeek 独立开发者视角逆向",
+                "等待 App Store 日报更新。",
+            ),
+        )
+        app_stats_inner = ""
+
+    github_stats = (
+        f'<span>采样 <strong>{total}</strong> 个项目</span>'
+        f'<span>成功分析 <strong>{success}</strong> 个</span>'
+        f'<span>Trending 热榜 <strong>{len(trending)}</strong> 个</span>'
+        f'<span>近期新星 <strong>{len(search)}</strong> 个</span>'
+    )
+    sec_github_stats = _marked("github-stats", github_stats)
+    sec_app_stats = _marked("app-stats", app_stats_inner)
 
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>GitHub 黑马技术雷达 — {today}</title>
+  <title>黑马技术雷达 — {today}</title>
   <style>
     *,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
     body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
@@ -451,13 +427,10 @@ def generate_html(
 </head>
 <body>
   <header class="site-header">
-    <h1>🎯 GitHub 黑马技术雷达 <em>{today}</em></h1>
+    <h1>🎯 黑马技术雷达 <em>{today}</em></h1>
     <div class="hm">
-      <span>采样 <strong>{total}</strong> 个项目</span>
-      <span>成功分析 <strong>{success}</strong> 个</span>
-      <span>Trending 热榜 <strong>{len(trending)}</strong> 个</span>
-      <span>近期新星 <strong>{len(search)}</strong> 个</span>
-      {app_stats}
+      {sec_github_stats}
+      {sec_app_stats}
     </div>
   </header>
   <main class="container">
@@ -467,7 +440,7 @@ def generate_html(
     {sec_app}
   </main>
   <footer class="site-footer">
-    ⚠️ 本日报仅供技术研判参考，不构成任何投资建议。每周一北京时间 09:00 自动更新。
+    ⚠️ 本报告仅供技术研判参考，不构成任何投资建议。App Store 每日更新 · GitHub 每周一更新（北京时间 09:00）。
   </footer>
 </body>
 </html>"""
@@ -609,63 +582,73 @@ def generate_markdown(
         ])
     fm.append("---")
 
-    lines = [
-        "\n".join(fm) + "\n",
-        f"# 黑马雷达日报 — {today}\n",
+    summary = (
         f"> 采样 **{total}** 个项目，成功分析 **{success}** 个"
-        f" · Trending **{len(trending)}** · 近期新星 **{len(search)}**",
-    ]
+        f" · Trending **{len(trending)}** · 近期新星 **{len(search)}**"
+    )
     if include_app:
-        lines[-1] += (
+        summary += (
             f" · App 采集池 **{app_pool_size}**"
             f" · 顾问推送 **{len(new_listing_results)}**"
             f" · 黑马分析 **{app_horse_ok}**"
         )
-    lines.append("\n---\n")
 
+    github_parts: List[str] = []
     if trending:
-        lines.append("\n## 🔥 GitHub Trending 热榜分析\n")
-        lines.append("*来源：GitHub Trending 日榜 / 周榜 / 月榜，综合去重后 AI 研判*\n")
+        github_parts.append("\n## 🔥 GitHub Trending 热榜分析\n")
+        github_parts.append("*来源：GitHub Trending 日榜 / 周榜 / 月榜，综合去重后 AI 研判*\n")
         for i, r in enumerate(trending, 1):
-            lines.append(_md_github_card(r, i))
-
+            github_parts.append(_md_github_card(r, i))
     if search:
-        lines.append("\n## 🚀 近3天高速崛起\n")
-        lines.append("*来源：GitHub Search API — 近3天新建项目，按 Star 增速排序*\n")
+        github_parts.append("\n## 🚀 近3天高速崛起\n")
+        github_parts.append("*来源：GitHub Search API — 近3天新建项目，按 Star 增速排序*\n")
         for i, r in enumerate(search, len(trending) + 1):
-            lines.append(_md_github_card(r, i))
+            github_parts.append(_md_github_card(r, i))
+    if not github_parts:
+        github_parts.append("\n> 等待周一 GitHub 周报更新。\n")
 
+    app_parts: List[str] = []
     if include_app:
         pool_note = f"从 **{app_pool_size}** 个" if app_pool_size else "从采集池"
         rss_limit = os.getenv("APP_RSS_LIMIT", "100")
-        lines.append("\n## 🆕 App Store 上新监控\n")
-        lines.append(
+        app_parts.append("\n## 🆕 App Store 上新监控\n")
+        app_parts.append(
             f"*来源：US/JP × 4分类 newapplications RSS（每类最多 {rss_limit} 条），"
             f"顾问按性价比+新颖性筛选，{pool_note} 推送 Top **{len(new_listing_results)}** 并完成深入分析*\n"
         )
         if new_listing_results:
             base = len(results) + 1
             for i, r in enumerate(new_listing_results, base):
-                lines.append(_md_app_card(r, i))
+                app_parts.append(_md_app_card(r, i))
         else:
-            lines.append("> 今日 RSS 未发现新上架 App，快照持续跟踪中。\n")
+            app_parts.append("> 今日无首次上新候选（已去重），快照持续跟踪中。\n")
 
-        lines.append("\n## 📱 App Store 黑马雷达\n")
-        lines.append(
+        app_parts.append("\n## 📱 App Store 黑马雷达\n")
+        app_parts.append(
             "*来源：评论斜率过滤 + DeepSeek 独立开发者视角逆向（仅分析命中指标 A/B 的 App）*\n"
         )
         if app_results:
             base = len(results) + len(new_listing_results) + 1
             for i, r in enumerate(app_results, base):
-                lines.append(_md_app_card(r, i))
+                app_parts.append(_md_app_card(r, i))
         else:
-            lines.append(
+            app_parts.append(
                 "> 本次未命中黑马阈值（指标A：7天内评论爆发；指标B：12小时内评论斜率飙升）。"
-                "上新 App 已在上方列表持续跟踪。\n"
+                "上新 App 已在持续跟踪。\n"
             )
+    else:
+        app_parts.append("\n> 等待 App Store 日报更新。\n")
 
-    lines.append("\n---\n\n*⚠️ 本日报仅供技术研判参考，不构成任何投资建议。*\n")
-    return "".join(lines)
+    return "".join([
+        "\n".join(fm) + "\n",
+        f"# 黑马雷达日报 — {today}\n",
+        summary,
+        "\n---\n",
+        _marked("md-github", "".join(github_parts)),
+        "\n",
+        _marked("md-app", "".join(app_parts)),
+        "\n---\n\n*⚠️ 本日报仅供技术研判参考，不构成任何投资建议。*\n",
+    ])
 
 
 _INDEX_START = "<!-- radar-index -->"
@@ -742,6 +725,8 @@ def archive_report(
     new_listing_results: Optional[List[AppAnalysisResult]] = None,
     app_pool_size: int = 0,
     date: Optional[str] = None,
+    preserve_github: bool = False,
+    preserve_app: bool = False,
 ) -> Path:
     """Write daily Markdown archive to knowledge/YYYY-MM-DD.md (Obsidian vault)."""
     if app_results is None:
@@ -751,13 +736,20 @@ def archive_report(
     day = date or beijing_today()
     _ensure_vault_scaffold()
     out = ARCHIVE_DIR / f"{day}.md"
-    out.write_text(
-        generate_markdown(
-            results, app_results, new_listings, new_listing_results, app_pool_size,
-            date=day,
-        ),
-        encoding="utf-8",
+    new_md = generate_markdown(
+        results, app_results, new_listings, new_listing_results, app_pool_size,
+        date=day,
     )
+    if out.exists() and (preserve_github or preserve_app):
+        old_md = out.read_text(encoding="utf-8")
+        names = []
+        if preserve_github:
+            names.append("md-github")
+        if preserve_app:
+            names.append("md-app")
+        new_md = _merge_marked_sections(new_md, old_md, names)
+        logger.info("Merged markdown archive sections: %s", ", ".join(names))
+    out.write_text(new_md, encoding="utf-8")
     _update_vault_index(day)
     logger.info("Markdown archive written to %s (%d bytes)", out, out.stat().st_size)
     return out
@@ -769,23 +761,40 @@ def write_report(
     new_listings: List = None,
     new_listing_results: List[AppAnalysisResult] = None,
     app_pool_size: int = 0,
+    preserve_github: bool = False,
+    preserve_app: bool = False,
 ) -> Path:
     if app_results is None:
         app_results = []
-    if new_listings is None:
-        new_listings = None
     if new_listing_results is None:
         new_listing_results = []
     DOCS_DIR.mkdir(exist_ok=True)
     out = DOCS_DIR / "index.html"
-    out.write_text(
-        generate_html(
-            results, app_results, new_listings, new_listing_results, app_pool_size,
-        ),
-        encoding="utf-8",
+    new_html = generate_html(
+        results, app_results, new_listings, new_listing_results, app_pool_size,
     )
+    if out.exists() and (preserve_github or preserve_app):
+        old_html = out.read_text(encoding="utf-8")
+        names: List[str] = []
+        if preserve_github:
+            names.extend(["github-trending", "github-search", "github-stats"])
+        if preserve_app:
+            names.extend(["app-new", "app-horse", "app-stats"])
+        # Only merge sections that already exist in the old page (legacy pages may lack markers)
+        mergeable = [n for n in names if _extract_marked(old_html, n)]
+        if mergeable:
+            new_html = _merge_marked_sections(new_html, old_html, mergeable)
+            logger.info("Merged HTML sections from previous Pages: %s", ", ".join(mergeable))
+        else:
+            logger.info(
+                "Previous index.html has no section markers; writing full page "
+                "(next run will support partial merge)"
+            )
+    out.write_text(new_html, encoding="utf-8")
     logger.info("HTML report written to %s (%d bytes)", out, out.stat().st_size)
     archive_report(
         results, app_results, new_listings, new_listing_results, app_pool_size,
+        preserve_github=preserve_github,
+        preserve_app=preserve_app,
     )
     return out

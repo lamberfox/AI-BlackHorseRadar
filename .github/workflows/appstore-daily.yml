@@ -1,14 +1,16 @@
-name: 全量雷达（手动）
+name: App Store 日报
 
-# 日程已拆到 appstore-daily.yml / github-weekly.yml；本文件仅保留手动全量跑。
 on:
+  schedule:
+    # 每天 UTC 01:15 = 北京时间 09:15（与周报错开，避免 Monday 抢推）
+    - cron: '15 1 * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  radar:
+  appstore:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,12 +30,13 @@ jobs:
           echo "::add-mask::${{ secrets.DEEPSEEK_API_KEY }}"
           echo "::add-mask::${{ secrets.WECOM_WEBHOOK_URL }}"
 
-      - name: Run full radar
+      - name: Run App Store radar
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           WECOM_WEBHOOK_URL: ${{ secrets.WECOM_WEBHOOK_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          SKIP_GITHUB: "1"
         run: python src/main.py
 
       - name: Publish report to GitHub Pages
@@ -41,6 +44,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/ knowledge/ app_snapshots.json
-          git diff --staged --quiet || git commit -m "report: $(date -u +%Y-%m-%d) full radar [skip ci]"
+          git diff --staged --quiet || git commit -m "report: $(date -u +%Y-%m-%d) appstore daily [skip ci]"
           git pull --rebase --autostash || true
           git push

@@ -80,6 +80,53 @@ def save_snapshots(snapshots: Dict) -> None:
         logger.error("Failed to save snapshots: %s", e)
 
 
+def migrate_legacy_new_listing_flags(snapshots: Dict) -> int:
+    """Treat existing snapshots without new_listing_reported_at as already reported (2A)."""
+    patched = 0
+    for snap in snapshots.values():
+        if not isinstance(snap, dict):
+            continue
+        if snap.get("new_listing_reported_at"):
+            continue
+        snap["new_listing_reported_at"] = (
+            snap.get("first_seen") or snap.get("last_checked") or _now_iso()
+        )
+        patched += 1
+    if patched:
+        logger.info("Migrated new_listing_reported_at on %d existing snapshots", patched)
+    return patched
+
+
+def is_new_listing_eligible(snapshots: Dict, app_id: str) -> bool:
+    """True if this app has never been successfully reported as a new listing."""
+    snap = snapshots.get(app_id)
+    if not snap:
+        return True
+    return not bool(snap.get("new_listing_reported_at"))
+
+
+def mark_new_listing_reported(
+    snapshots: Dict,
+    app_ids: List[str],
+    now_iso: Optional[str] = None,
+) -> int:
+    """Mark apps as successfully reported for 上新 (1B — call only after analyze success)."""
+    if now_iso is None:
+        now_iso = _now_iso()
+    marked = 0
+    for app_id in app_ids:
+        snap = snapshots.get(app_id)
+        if snap is None:
+            snapshots[app_id] = {"new_listing_reported_at": now_iso, "first_seen": now_iso}
+            marked += 1
+            continue
+        if snap.get("new_listing_reported_at"):
+            continue
+        snap["new_listing_reported_at"] = now_iso
+        marked += 1
+    return marked
+
+
 @retry(max_attempts=3, delay=3.0, exceptions=(requests.RequestException,))
 def _get(url: str, timeout: int = 10) -> dict:
     resp = requests.get(url, timeout=timeout, headers={"User-Agent": "BlackHorseRadar/1.0"})
@@ -416,23 +463,32 @@ def _enrich_from_snapshot(app: AppProject, snap: dict) -> None:
 def fetch_app_store_data() -> Tuple[List[AppProject], List[AppProject], Dict]:
     """Returns (new_listings, black_horses, snapshots).
 
-    new_listings — apps from newapplications RSS with recent release (上新监控)
-    black_horses — apps passing Indicator A or B (黑马雷达)
+    new_listings — RSS apps not yet successfully reported as 上新 (deduped)
+    black_horses — apps passing Indicator A or B (黑马雷达; A/B may re-alert)
     """
     regions = [r.strip() for r in os.getenv("APP_STORE_REGIONS", "us,jp").split(",")]
     snapshots = load_snapshots()
+    migrate_legacy_new_listing_flags(snapshots)
+
     all_candidates: List[AppProject] = []
     new_listings: List[AppProject] = []
     seen_ids: set = set()
+    rss_unique = 0
+    skipped_reported = 0
 
     for region in regions:
         for genre_id, category_label in TARGETS.get(region, []):
             rss_apps = fetch_new_apps(region, genre_id, category_label)
             for app in rss_apps:
-                if app.app_id not in seen_ids:
-                    seen_ids.add(app.app_id)
-                    all_candidates.append(app)
+                if app.app_id in seen_ids:
+                    continue
+                seen_ids.add(app.app_id)
+                all_candidates.append(app)
+                rss_unique += 1
+                if is_new_listing_eligible(snapshots, app.app_id):
                     new_listings.append(app)
+                else:
+                    skipped_reported += 1
             time.sleep(2.0)
 
     # Re-check tracked snapshots eligible for Indicator B (skip bulk stale revisits)
@@ -451,13 +507,15 @@ def fetch_app_store_data() -> Tuple[List[AppProject], List[AppProject], Dict]:
 
     # Newest first, cap listing + analysis pool
     new_listings.sort(key=lambda a: (a.release_date or "", a.app_id), reverse=True)
-    rss_unique = len(new_listings)
+    eligible_before_cap = len(new_listings)
     if NEW_LISTING_MAX > 0:
         new_listings = new_listings[:NEW_LISTING_MAX]
 
     logger.info(
-        "Total candidates: %d (RSS pool: %d, snapshot revisit: %d)",
-        len(all_candidates), rss_unique, revisit_count,
+        "Total candidates: %d (RSS: %d, new-listing eligible: %d, "
+        "skipped already-reported: %d, snapshot revisit: %d)",
+        len(all_candidates), rss_unique, eligible_before_cap,
+        skipped_reported, revisit_count,
     )
     black_horses = filter_black_horses(all_candidates, snapshots)
 
